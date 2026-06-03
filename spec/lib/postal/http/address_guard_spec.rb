@@ -23,6 +23,8 @@ RSpec.describe Postal::HTTP::AddressGuard do
     context "when given a public IPv6 literal" do
       let(:host) { "2606:2800:220:1:248:1893:25c8:1946" }
 
+      before { allow(described_class).to receive(:ipv6_supported?).and_return(true) }
+
       it "returns the address to connect to" do
         expect(call).to eq "2606:2800:220:1:248:1893:25c8:1946"
       end
