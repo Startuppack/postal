@@ -75,8 +75,11 @@ class SessionsController < ApplicationController
     auth = request.env["omniauth.auth"]
     user = User.find_from_oidc(auth.extra.raw_info, logger: Postal.logger)
     if user.nil?
-      redirect_to login_path, alert: "No user was found matching your identity. Please contact your administrator."
-      return
+      user = jit_provision_oidc_user(auth)
+      if user.nil?
+        redirect_to login_path, alert: "No user was found matching your identity. Please contact your administrator."
+        return
+      end
     end
 
     if Postal::Config.oidc.auto_provision_org?
@@ -93,6 +96,37 @@ class SessionsController < ApplicationController
   end
 
   private
+
+  def jit_provision_oidc_user(auth)
+    raw = auth.extra.raw_info
+    config = Postal::Config.oidc
+    email = raw[config.email_address_field]
+    return nil if email.blank?
+
+    full_name = raw[config.name_field].to_s
+    first_name = raw["given_name"].presence || full_name.split(/\s+/, 2).first.presence || email.split("@").first
+    last_name  = raw["family_name"].presence || full_name.split(/\s+/, 2)[1].to_s
+
+    user = User.new(
+      email_address: email,
+      first_name: first_name,
+      last_name: last_name,
+      oidc_uid: raw[config.uid_field],
+      oidc_issuer: config.issuer
+    )
+    user.password = SecureRandom.hex(24)
+
+    if user.save
+      Postal.logger.info("OIDC JIT provisioned user #{email}")
+      user
+    else
+      Postal.logger.error("OIDC JIT provision failed for #{email}: #{user.errors.full_messages.join(', ')}")
+      nil
+    end
+  rescue => e
+    Postal.logger.error("OIDC JIT provision error: #{e.message}")
+    nil
+  end
 
   def provision_orgs_from_oidc(user, raw_info)
     orgs_claim = raw_info["organization"]
