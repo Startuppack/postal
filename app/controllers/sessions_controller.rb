@@ -79,6 +79,10 @@ class SessionsController < ApplicationController
       return
     end
 
+    if Postal::Config.oidc.auto_provision_org?
+      provision_orgs_from_oidc(user, auth.extra.raw_info)
+    end
+
     login(user)
     flash[:remember_login] = true
     redirect_to_with_return_to root_path
@@ -89,6 +93,27 @@ class SessionsController < ApplicationController
   end
 
   private
+
+  def provision_orgs_from_oidc(user, raw_info)
+    orgs_claim = raw_info["organization"]
+    return unless orgs_claim.is_a?(Hash)
+
+    orgs_claim.each do |slug, info|
+      org = Organization.find_or_initialize_by(permalink: slug)
+      if org.new_record?
+        org.name = info.is_a?(Hash) ? (info["name"] || slug) : slug
+        org.save!
+        org.organization_users.create!(user: user, user_type: "User", admin: true, all_servers: true)
+        org.update!(owner: user)
+      else
+        unless org.organization_users.where(user: user, user_type: "User").exists?
+          org.organization_users.create!(user: user, user_type: "User", admin: true, all_servers: true)
+        end
+      end
+    end
+  rescue => e
+    Postal.logger.error("OIDC org provisioning failed: #{e.message}")
+  end
 
   def require_local_authentication
     return if Postal::Config.oidc.local_authentication_enabled?

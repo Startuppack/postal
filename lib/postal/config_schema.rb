@@ -596,6 +596,22 @@ module Postal
       string :jwks_uri do
         description "The JWKS endpoint on the authorization server (only used when discovery is false)"
       end
+
+      boolean :auto_provision_org do
+        description "Automatically create/join a Postal organization from the 'organization' OIDC claim on login"
+        default false
+      end
+    end
+
+    group :scim do
+      boolean :enabled do
+        description "Enable SCIM v2 provisioning endpoint"
+        default false
+      end
+
+      string :bearer_token do
+        description "Bearer token required to authenticate SCIM requests"
+      end
     end
   end
 

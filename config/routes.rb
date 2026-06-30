@@ -95,6 +95,15 @@ Rails.application.routes.draw do
     get "auth/oidc/callback", to: "sessions#create_from_oidc"
   end
 
+  if Postal::Config.scim.enabled?
+    namespace :scim do
+      scope "v2" do
+        resources :users, only: [:index, :show, :create, :update, :destroy]
+        resources :groups, only: [:index, :show, :create, :update, :destroy]
+      end
+    end
+  end
+
   get ".well-known/jwks.json" => "well_known#jwks"
 
   get "ip" => "sessions#ip"
