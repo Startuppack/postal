@@ -130,12 +130,21 @@ class SessionsController < ApplicationController
 
   def provision_orgs_from_oidc(user, raw_info)
     orgs_claim = raw_info["organization"]
-    return unless orgs_claim.is_a?(Hash)
+    return if orgs_claim.blank?
 
-    orgs_claim.each do |slug, info|
+    # KC can return organization as Hash {"slug" => {"name" => ...}} or Array ["slug", ...]
+    slug_name_pairs = if orgs_claim.is_a?(Hash)
+      orgs_claim.map { |slug, info| [slug.to_s, info.is_a?(Hash) ? (info["name"] || slug.to_s) : slug.to_s] }
+    elsif orgs_claim.is_a?(Array)
+      orgs_claim.map { |slug| [slug.to_s, slug.to_s] }
+    else
+      return
+    end
+
+    slug_name_pairs.each do |slug, name|
       org = Organization.find_or_initialize_by(permalink: slug)
       if org.new_record?
-        org.name = info.is_a?(Hash) ? (info["name"] || slug) : slug
+        org.name = name
         org.save!
         org.organization_users.create!(user: user, user_type: "User", admin: true, all_servers: true)
         org.update!(owner: user)
