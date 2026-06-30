@@ -145,9 +145,9 @@ class SessionsController < ApplicationController
       org = Organization.find_or_initialize_by(permalink: slug)
       if org.new_record?
         org.name = name
+        org.owner = user
         org.save!
         org.organization_users.create!(user: user, user_type: "User", admin: true, all_servers: true)
-        org.update!(owner: user)
       else
         unless org.organization_users.where(user: user, user_type: "User").exists?
           org.organization_users.create!(user: user, user_type: "User", admin: true, all_servers: true)
