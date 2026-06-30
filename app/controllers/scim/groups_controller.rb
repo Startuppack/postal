@@ -22,12 +22,13 @@ module Scim
       org = Organization.find_or_initialize_by(permalink: slug)
       if org.new_record?
         org.name = name
-        owner = User.find_by(id: owner_id) if owner_id
-        org.save!
-        if owner
-          org.organization_users.create!(user: owner, user_type: "User", admin: true, all_servers: true)
-          org.update!(owner: owner)
+        owner = owner_id ? User.find_by(id: owner_id) : nil
+        if owner.nil?
+          owner = User.first
         end
+        org.owner = owner
+        org.save!
+        org.organization_users.create!(user: owner, user_type: "User", admin: true, all_servers: true) if owner
       end
 
       sync_members(org, body_params["members"])
