@@ -93,7 +93,7 @@ module Scim
         active: true,
         meta: {
           resourceType: "User",
-          location: scim_v2_user_url(user)
+          location: scim_user_url(user)
         }
       }
     end

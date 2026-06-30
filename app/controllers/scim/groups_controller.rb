@@ -99,7 +99,7 @@ module Scim
         members: members,
         meta: {
           resourceType: "Group",
-          location: scim_v2_group_url(org)
+          location: scim_group_url(org)
         }
       }
     end
