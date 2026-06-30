@@ -76,7 +76,10 @@ Rails.application.routes.draw do
   end
 
   resources :organizations, except: [:index]
-  resources :users
+  resources :users do
+    post :impersonate, on: :member
+  end
+  delete "impersonate", to: "users#stop_impersonating", as: "stop_impersonating"
   resources :ip_pools do
     resources :ip_addresses
   end

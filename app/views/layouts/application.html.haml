@@ -10,6 +10,15 @@
     = yield :head
   %body
     = display_flash
+    - if impersonating?
+      .impersonationBanner
+        .impersonationBanner__text
+          You are impersonating
+          %strong= current_user.name
+          (#{current_user.email_address})
+          as
+          %strong= real_user.name
+        = link_to "Stop impersonating", stop_impersonating_path, method: :delete, class: "impersonationBanner__stop button button--small button--negative"
     %header.siteHeader{'data-turbolinks-permanent' => true}
       - if flash[:remember_login] && !auth_session.persistent?
         .siteHeader__remember.js-remember
