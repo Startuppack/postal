@@ -4,7 +4,6 @@ class UsersController < ApplicationController
 
   before_action :admin_required
   before_action { params[:id] && @user = User.find_by!(uuid: params[:id]) }
-  skip_before_action :admin_required, only: [:stop_impersonating]
 
   def index
     @users = User.order(:first_name, :last_name).includes(:organization_users)
@@ -52,28 +51,6 @@ class UsersController < ApplicationController
 
     @user.destroy!
     redirect_to_with_json :users, notice: "#{@user.name} has been removed"
-  end
-
-  def impersonate
-    if @user == real_user
-      redirect_to users_path, alert: "You cannot impersonate yourself."
-      return
-    end
-    if @user.organization_users.empty?
-      redirect_to users_path, alert: "#{@user.name} is not in any organization."
-      return
-    end
-    auth_session.set(:impersonating_user_id, @user.id)
-    redirect_to root_path, notice: "Now impersonating #{@user.name}."
-  end
-
-  def stop_impersonating
-    unless impersonating?
-      redirect_to root_path
-      return
-    end
-    auth_session.set(:impersonating_user_id, nil)
-    redirect_to users_path, notice: "Impersonation ended."
   end
 
 end

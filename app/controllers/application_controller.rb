@@ -13,27 +13,6 @@ class ApplicationController < ActionController::Base
   rescue_from Authie::Session::ExpiredSession, with: :auth_session_error
   rescue_from Authie::Session::BrowserMismatch, with: :auth_session_error
 
-  # Impersonation support: real_user is always the authenticated admin;
-  # current_user returns the impersonated user when active.
-  def current_user
-    if logged_in? && (uid = auth_session.get(:impersonating_user_id)).present?
-      @impersonated_user ||= User.find_by(id: uid)
-    else
-      auth_session_delegate.current_user
-    end
-  end
-  helper_method :current_user
-
-  def real_user
-    auth_session_delegate.current_user
-  end
-  helper_method :real_user
-
-  def impersonating?
-    logged_in? && auth_session.get(:impersonating_user_id).present?
-  end
-  helper_method :impersonating?
-
   private
 
   def login_required
@@ -44,7 +23,7 @@ class ApplicationController < ActionController::Base
 
   def admin_required
     if logged_in?
-      unless real_user.admin?
+      unless current_user.admin?
         render plain: "Not permitted"
       end
     else

@@ -21,8 +21,6 @@
           %p.userList__email= user.email_address
         %ul.userList__actions
           %li= link_to "Edit user", [:edit, user]
-          - if user != real_user && user.organization_users.any?
-            %li= link_to "Impersonate", impersonate_user_path(user), method: :post, data: { confirm: "Impersonate #{user.name}?" }, class: "userList__impersonate"
           %li= link_to "Delete user", user, :method => :delete, :data => {:confirm => "Are you sure you wish to revoke #{user.name}'s access?", :disable_with => "Deleting..."}, :remote => true, :class => 'userList__revoke'
 
   %p.u-center= link_to "Add a new user", :new_user, :class => 'button button--positive'
