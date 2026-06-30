@@ -49,7 +49,14 @@ module Scim
           members = op["value"].is_a?(Array) ? op["value"] : [op["value"]]
           members.each do |m|
             user = User.find_by(id: m["value"])
-            org.organization_users.where(user: user, user_type: "User").destroy_all if user
+            if user
+              org.organization_users.where(user: user, user_type: "User").destroy_all
+              user.destroy if user.organization_users.reload.empty?
+            end
+          end
+          if org.organization_users.reload.empty?
+            org.destroy
+            return head :no_content
           end
         when "replace"
           sync_members(org, op["value"]) if op["path"].nil?
@@ -63,6 +70,7 @@ module Scim
       org = Organization.find_by(id: params[:id])
       return render json: scim_error("Group not found", 404), status: :not_found unless org
 
+      cleanup_orphaned_users(org)
       org.destroy
       head :no_content
     end
@@ -73,6 +81,15 @@ module Scim
       @body_params ||= begin
         raw = request.body.read
         raw.present? ? JSON.parse(raw) : {}
+      end
+    end
+
+    def cleanup_orphaned_users(org)
+      org.organization_users.where(user_type: "User").includes(:user).each do |ou|
+        user = ou.user
+        next unless user
+        other_orgs = user.organization_users.where.not(organization_id: org.id)
+        user.destroy if other_orgs.empty?
       end
     end
 
