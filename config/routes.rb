@@ -97,9 +97,9 @@ Rails.application.routes.draw do
 
   if Postal::Config.scim.enabled?
     namespace :scim do
-      scope "v2" do
-        resources :users, only: [:index, :show, :create, :update, :destroy]
-        resources :groups, only: [:index, :show, :create, :update, :destroy]
+      scope "v2/tenants/:org_permalink" do
+        resources :users,  path: "Users",  only: [:index, :show, :create, :update, :destroy]
+        resources :groups, path: "Groups", only: [:index, :show, :update]
       end
     end
   end
