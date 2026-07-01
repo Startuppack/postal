@@ -18,7 +18,7 @@
     header { border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1rem; }
     header .logo { font-size: 1.4rem; font-weight: 700; }
     header .badge { font-size: .75rem; background: #1f3a20; color: var(--accent); border: 1px solid var(--accent); border-radius: 20px; padding: .2rem .6rem; }
-    header nav { margin-left: auto; display: flex; gap: 1.5rem; font-size: .9rem; }
+    header nav { margin-left: auto; display: flex; gap: 1.5rem; font-size: .9rem; flex-wrap: wrap; }
     header nav a { color: var(--muted); }
 
     .hero { max-width: 800px; margin: 5rem auto 3rem; padding: 0 2rem; text-align: center; }
@@ -32,36 +32,61 @@
     .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
     .btn-secondary:hover { background: #21262d; text-decoration: none; }
 
-    .fork-notice { max-width: 860px; margin: 0 auto 3rem; padding: 0 2rem; }
+    .fork-notice { max-width: 900px; margin: 0 auto 3rem; padding: 0 2rem; }
     .fork-notice .inner { background: #1a1207; border: 1px solid #6e4c00; border-radius: var(--radius); padding: 1rem 1.2rem; color: #d29922; font-size: .9rem; }
     .fork-notice .inner strong { color: #e3b341; }
 
-    .content { max-width: 860px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .content { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
     section { margin-bottom: 4rem; }
-    section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
-    section h3 { font-size: 1.05rem; font-weight: 700; margin: 1.5rem 0 .6rem; color: var(--text); }
+    section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.2rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+    section h3 { font-size: 1.05rem; font-weight: 700; margin: 2rem 0 .6rem; color: var(--text); }
+    section h4 { font-size: .9rem; font-weight: 600; margin: 1.2rem 0 .4rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
     section p, section li { color: var(--muted); margin-bottom: .5rem; }
-    section li { margin-left: 1.2rem; }
+    section ul { padding-left: 1.4rem; }
+    section li { margin-bottom: .3rem; }
 
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; }
     .card .icon { font-size: 1.6rem; margin-bottom: .6rem; }
-    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; color: var(--text); margin-top: 0; }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; color: var(--text); margin-top: 0; text-transform: none; letter-spacing: 0; }
     .card p { font-size: .9rem; color: var(--muted); margin: 0; }
 
     pre, code { font-family: "SF Mono", "Fira Code", monospace; font-size: .875rem; }
-    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; overflow-x: auto; margin: 1rem 0; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; overflow-x: auto; margin: .8rem 0; }
     code { background: var(--code-bg); padding: .15em .35em; border-radius: 4px; font-size: .85em; }
 
-    .table-wrap { overflow-x: auto; margin: 1rem 0; }
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .table-wrap { overflow-x: auto; margin: .8rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
     th { text-align: left; padding: .6rem .8rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-weight: 600; }
-    td { padding: .55rem .8rem; border: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+    td { padding: .5rem .8rem; border: 1px solid var(--border); color: var(--muted); vertical-align: top; }
     tr:nth-child(even) td { background: #0f141a; }
     .yes { color: var(--accent); font-weight: 700; text-align: center; }
     .no  { color: #6e7681; text-align: center; }
 
+    /* Role badges */
+    .role { display: inline-block; border-radius: 20px; padding: .1rem .55rem; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+    .role-super  { background: #3d1f00; color: #f97316; border: 1px solid #7c3306; }
+    .role-admin  { background: #0d2340; color: #60a5fa; border: 1px solid #1e4080; }
+    .role-member { background: #1a2e1a; color: #4ade80; border: 1px solid #2d5a2d; }
+    .role-any    { background: #1e1e1e; color: #9ca3af; border: 1px solid #374151; }
+
+    .endpoint-block { margin-bottom: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .endpoint-block .ep-header { padding: .7rem 1rem; display: flex; align-items: center; gap: .7rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .method { font-family: "SF Mono", monospace; font-size: .8rem; font-weight: 700; padding: .2rem .5rem; border-radius: 4px; }
+    .GET    { background: #0d3020; color: #4ade80; }
+    .POST   { background: #1a2e50; color: #60a5fa; }
+    .PATCH  { background: #2d1f3d; color: #c084fc; }
+    .DELETE { background: #3d1515; color: #f87171; }
+    .ep-path { font-family: "SF Mono", monospace; font-size: .85rem; color: var(--text); flex: 1; }
+    .ep-body { padding: 1rem; }
+    .ep-body p { color: var(--muted); font-size: .9rem; margin-bottom: .6rem; }
+    .ep-body pre { margin: .4rem 0; font-size: .82rem; }
+
     footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: .85rem; }
+
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.4rem; margin-bottom: 2rem; }
+    .toc a { color: var(--muted); font-size: .9rem; display: inline-block; margin: .1rem .8rem .1rem 0; }
+    .toc a:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -70,10 +95,12 @@
   <span class="logo">✉ Postal</span>
   <span class="badge">Startup Pack fork</span>
   <nav>
-    <a href="#api">API v2</a>
-    <a href="#auth">Auth</a>
-    <a href="#roles">Roles</a>
     <a href="#config">Config</a>
+    <a href="#auth">Auth</a>
+    <a href="#api">API v2</a>
+    <a href="#scim">SCIM</a>
+    <a href="#roles">Roles</a>
+    <a href="#oidc">SSO/OIDC</a>
     <a href="https://github.com/Startuppack/postal">GitHub</a>
     <a href="https://docs.postalserver.io">Official docs</a>
   </nav>
@@ -82,7 +109,7 @@
 <main>
   <div class="hero">
     <h1>Postal with a<br><span>provisioning API</span></h1>
-    <p>Open-source mail server — extended by Startup Pack with a full admin REST API, member roles, and auto-provisioned SMTP servers.</p>
+    <p>Open-source mail server — extended by Startup Pack with a full admin REST API, per-user access, member roles, SCIM v2 per-tenant, and auto-provisioned SMTP servers.</p>
     <div class="actions">
       <a class="btn btn-primary" href="#api">API reference</a>
       <a class="btn btn-secondary" href="https://github.com/Startuppack/postal">View on GitHub</a>
@@ -94,7 +121,6 @@
       <strong>This is an unofficial fork.</strong>
       Maintained by <a href="https://startuppack.xyz" style="color:#e3b341">Startup Pack</a>,
       not affiliated with the <a href="https://github.com/postalserver/postal" style="color:#e3b341">official Postal project</a> (Krystal Hosting Ltd).
-      The API v2 and role system were created by Startup Pack.
     </div>
   </div>
 
@@ -103,213 +129,619 @@
     <section>
       <h2>What this fork adds</h2>
       <div class="cards">
-        <div class="card"><div class="icon">🔌</div><h3>Admin REST API v2</h3><p>Full provisioning API for orgs, servers, domains, credentials and users — no Rails console needed.</p></div>
-        <div class="card"><div class="icon">👥</div><h3>Multi-user orgs</h3><p>Add multiple users to an organization with granular roles via API or SCIM.</p></div>
-        <div class="card"><div class="icon">🔒</div><h3>Role-based access</h3><p><code>admin</code>, <code>member</code>, <code>readonly</code> — enforced across all web UI controllers.</p></div>
-        <div class="card"><div class="icon">⚡</div><h3>Auto SMTP server</h3><p>Creating an org via API or SCIM automatically provisions a Live SMTP server and default credential.</p></div>
-        <div class="card"><div class="icon">🔐</div><h3>SCIM v2 + OIDC</h3><p>SCIM user/group sync and JIT OIDC user provisioning on first SSO login.</p></div>
-        <div class="card"><div class="icon">🛠</div><h3>Upstream fixes</h3><p>UTF-8 subject encoding, SMTP timeouts, stale webhook locks, X-Envelope-From, Message-ID idempotency.</p></div>
+        <div class="card"><div class="icon">🔌</div><h3>Admin REST API v2</h3><p>Full provisioning API — orgs, servers, domains, credentials, users. Per-user access with role enforcement.</p></div>
+        <div class="card"><div class="icon">👥</div><h3>Multi-user orgs</h3><p>Multiple users per org with <code>admin</code>, <code>member</code>, <code>readonly</code> roles via API or SCIM.</p></div>
+        <div class="card"><div class="icon">🔒</div><h3>Role-based access</h3><p>Enforced on every API endpoint and across all web UI controllers.</p></div>
+        <div class="card"><div class="icon">⚡</div><h3>Auto SMTP server</h3><p>Creating an org via API or SCIM automatically provisions a Live SMTP server + credential.</p></div>
+        <div class="card"><div class="icon">🔐</div><h3>SCIM v2 per-tenant</h3><p><code>/scim/v2/tenants/:org/Users</code> — users and org params managed per tenant.</p></div>
+        <div class="card"><div class="icon">🚀</div><h3>SSO auto-org</h3><p>New SSO users get a default org created automatically from their username.</p></div>
       </div>
     </section>
 
+    <!-- ═══════════════ CONFIG ═══════════════ -->
     <section id="config">
       <h2>Configuration</h2>
-      <p>Add to your <code>postal.yml</code>. The only required field is <code>oidc.issuer</code> — Postal fetches public keys automatically.</p>
+      <p>Add to <code>postal.yml</code>. Postal fetches Keycloak public keys automatically — no secret stored locally.</p>
       <pre>api:
   enabled: true
-  required_azp: my-service-account   # optional — restrict to one KC/Entra/Google client
+  required_azp: postal-api          # optional — restrict to one specific KC/Entra/Google client
 
 oidc:
-  issuer: https://login.example.com/realms/myrealm   # must match the 'iss' claim in your JWTs
+  enabled: true
+  issuer: https://login.example.com/realms/myrealm  # must match 'iss' in your JWTs
+  # jwks_uri: ...                   # optional override; auto-discovered from issuer
+  auto_create_org_on_signup: true   # create a default org for new SSO users
+  auto_provision_org: false         # create/join orgs from the 'organization' JWT claim
 
 scim:
   enabled: true
-  bearer_token: &lt;scim-token&gt;</pre>
+  bearer_token: &lt;scim-static-token&gt;</pre>
     </section>
 
+    <!-- ═══════════════ AUTH ═══════════════ -->
     <section id="auth">
       <h2>Authentication</h2>
       <p>
-        Postal acts as a <strong>Resource Server</strong> — it never issues tokens itself.
-        Your identity provider (Keycloak, Microsoft Entra, or Google) issues a JWT via the
-        <code>client_credentials</code> grant. Postal verifies it using the provider's public keys,
-        fetched automatically from <code>{issuer}/.well-known/openid-configuration</code> and cached for 1 hour.
-        No secret is stored in Postal.
+        Postal is a <strong>Resource Server only</strong> — it never issues tokens.
+        Your IdP (Keycloak, Microsoft Entra, Google) issues JWTs; Postal verifies them via JWKS,
+        auto-discovered from <code>{issuer}/.well-known/openid-configuration</code> and cached 1 h.
+        On key rotation, the cache busts automatically on the next unknown <code>kid</code>.
       </p>
-      <p style="margin-top:.6rem">Every API request must include:</p>
       <pre>Authorization: Bearer &lt;access_token&gt;</pre>
 
-      <h3 style="margin-top:2rem; color: var(--accent)">Keycloak</h3>
-
-      <p><strong>1. Create a service-account client</strong></p>
-      <p>In your realm → <em>Clients</em> → <em>Create client</em>:</p>
+      <h3>Token types &amp; access level</h3>
       <div class="table-wrap"><table>
-        <tr><th>Field</th><th>Value</th></tr>
-        <tr><td>Client ID</td><td><code>postal-api</code> (or any name)</td></tr>
-        <tr><td>Client authentication</td><td>ON</td></tr>
-        <tr><td>Authentication flow</td><td>Service accounts roles only</td></tr>
+        <tr><th>Token</th><th>How to get it</th><th>Access</th></tr>
+        <tr>
+          <td><span class="role role-super">super-admin</span></td>
+          <td>KC <code>client_credentials</code> where <code>azp</code> matches <code>api.required_azp</code><br>— or any token for a Postal user with <code>admin: true</code></td>
+          <td>Everything — all orgs, all users, create/delete/suspend orgs</td>
+        </tr>
+        <tr>
+          <td><span class="role role-admin">org-admin</span></td>
+          <td>KC user login (authorization_code or password grant)<br>User must have <code>admin</code> role in the org</td>
+          <td>Their orgs: CRUD servers/domains/credentials, manage members, edit org settings</td>
+        </tr>
+        <tr>
+          <td><span class="role role-member">member</span></td>
+          <td>KC user login — <code>member</code> role in org</td>
+          <td>Their orgs: CRUD servers/domains/credentials — no org settings, no member management</td>
+        </tr>
+        <tr>
+          <td><span class="role role-any">readonly</span></td>
+          <td>KC user login — <code>readonly</code> role in org</td>
+          <td>Their orgs: GET only on all resources</td>
+        </tr>
       </table></div>
-      <p>Copy the <em>Client secret</em> from the <em>Credentials</em> tab.</p>
+      <p style="margin-top:.8rem">User identity is resolved from the JWT <code>email</code> or <code>preferred_username</code> claim, matched against <code>User.email_address</code>.</p>
 
-      <p><strong>2. Get a token</strong></p>
+      <h3 style="color: var(--accent)">Keycloak — service account (super-admin)</h3>
+      <p>Realm → <em>Clients</em> → <em>Create client</em>: set <em>Client authentication ON</em>, <em>Service accounts roles ON</em>.</p>
       <pre>curl -s -X POST \
   https://login.example.com/realms/myrealm/protocol/openid-connect/token \
   -d grant_type=client_credentials \
   -d client_id=postal-api \
-  -d client_secret=&lt;secret&gt; \
-  | jq -r .access_token</pre>
+  -d client_secret=&lt;secret&gt; | jq -r .access_token</pre>
 
-      <p><strong>3. Configure Postal</strong></p>
-      <pre>oidc:
-  issuer: https://login.example.com/realms/myrealm
+      <h3 style="color: var(--accent)">Keycloak — user token (org-admin / member / readonly)</h3>
+      <p>Standard authorization_code flow or, for testing, the password grant (if enabled in realm):</p>
+      <pre>curl -s -X POST \
+  https://login.example.com/realms/myrealm/protocol/openid-connect/token \
+  -d grant_type=password \
+  -d client_id=postal-ui \
+  -d username=alice@example.com \
+  -d password=&lt;password&gt; | jq -r .access_token</pre>
 
-api:
-  enabled: true
-  required_azp: postal-api   # the client_id above</pre>
-
-      <p>The JWKS URI is auto-discovered. No other config needed.</p>
-
-      <h3 style="margin-top:2rem; color: var(--accent2)">Microsoft Entra (Azure AD)</h3>
-
-      <p><strong>1. Register an application</strong></p>
-      <p>Azure Portal → <em>App registrations</em> → <em>New registration</em>. Then:</p>
-      <ul>
-        <li><em>Certificates &amp; secrets</em> → <em>New client secret</em> → copy the value</li>
-        <li><em>Expose an API</em> → <em>Add a scope</em> (e.g. <code>postal.admin</code>) — or use the default <code>.default</code> scope</li>
-      </ul>
-      <p>Note your <strong>Application (client) ID</strong> and <strong>Directory (tenant) ID</strong>.</p>
-
-      <p><strong>2. Get a token</strong></p>
+      <h3 style="color: var(--accent2)">Microsoft Entra</h3>
       <pre>curl -s -X POST \
   https://login.microsoftonline.com/&lt;tenant_id&gt;/oauth2/v2.0/token \
   -d grant_type=client_credentials \
   -d client_id=&lt;app_id&gt; \
   -d client_secret=&lt;secret&gt; \
-  -d scope=&lt;app_id&gt;/.default \
-  | jq -r .access_token</pre>
-
-      <p><strong>3. Configure Postal</strong></p>
+  -d scope=&lt;app_id&gt;/.default | jq -r .access_token</pre>
       <pre>oidc:
   issuer: https://login.microsoftonline.com/&lt;tenant_id&gt;/v2.0
-
 api:
-  enabled: true
-  required_azp: &lt;app_id&gt;   # Application (client) ID</pre>
+  required_azp: &lt;app_id&gt;</pre>
 
-      <p>Postal will auto-discover JWKS from <code>https://login.microsoftonline.com/&lt;tenant_id&gt;/v2.0/.well-known/openid-configuration</code>.</p>
-
-      <h3 style="margin-top:2rem; color: #ea4335">Google</h3>
-
-      <p><strong>1. Create a service account</strong></p>
-      <p>Google Cloud Console → <em>IAM &amp; Admin</em> → <em>Service Accounts</em> → <em>Create</em>. Then:</p>
-      <ul>
-        <li>Go to the service account → <em>Keys</em> → <em>Add key</em> → JSON → download</li>
-        <li>Note the <code>client_email</code> and <code>client_id</code> from the JSON file</li>
-      </ul>
-
-      <p><strong>2. Get a token</strong> (using the Google auth library or <code>oauth2l</code>)</p>
-      <pre># with oauth2l (https://github.com/google/oauth2l)
-oauth2l fetch --credentials service-account.json --scope openid email
-
-# or with Python google-auth
-python3 - &lt;&lt;'EOF'
-import google.auth, google.auth.transport.requests
-creds, _ = google.auth.default(scopes=["openid","email"])
-creds.refresh(google.auth.transport.requests.Request())
-print(creds.token)
-EOF</pre>
-
-      <p><strong>3. Configure Postal</strong></p>
+      <h3 style="color: #ea4335">Google</h3>
+      <pre># Using oauth2l
+oauth2l fetch --credentials service-account.json --scope openid email</pre>
       <pre>oidc:
   issuer: https://accounts.google.com
-  jwks_uri: https://www.googleapis.com/oauth2/v3/certs   # optional, auto-discovered
-
 api:
-  enabled: true
   required_azp: &lt;client_id from service-account.json&gt;</pre>
 
-      <div class="table-wrap" style="margin-top:1.5rem"><table>
-        <tr><th>Provider</th><th>Issuer (<code>iss</code>)</th><th>JWKS (auto-discovered)</th><th>Algorithm</th></tr>
-        <tr><td>Keycloak</td><td><code>{host}/realms/{realm}</code></td><td>via <code>/.well-known/openid-configuration</code></td><td>RS256</td></tr>
-        <tr><td>Microsoft Entra</td><td><code>https://login.microsoftonline.com/{tenant}/v2.0</code></td><td>via <code>/.well-known/openid-configuration</code></td><td>RS256</td></tr>
-        <tr><td>Google</td><td><code>https://accounts.google.com</code></td><td>via <code>/.well-known/openid-configuration</code></td><td>RS256</td></tr>
+      <div class="table-wrap" style="margin-top:1rem"><table>
+        <tr><th>Provider</th><th>Issuer (<code>iss</code>)</th><th>Algorithm</th></tr>
+        <tr><td>Keycloak</td><td><code>{host}/realms/{realm}</code></td><td>RS256</td></tr>
+        <tr><td>Microsoft Entra</td><td><code>https://login.microsoftonline.com/{tenant}/v2.0</code></td><td>RS256</td></tr>
+        <tr><td>Google</td><td><code>https://accounts.google.com</code></td><td>RS256</td></tr>
       </table></div>
     </section>
 
+    <!-- ═══════════════ API v2 ═══════════════ -->
     <section id="api">
       <h2>API v2 reference</h2>
-      <p>All requests require <code>Authorization: Bearer &lt;token&gt;</code>. Standard HTTP status codes: <code>200 201 204 401 404 422</code>.</p>
 
-      <h3>Organizations</h3>
-      <div class="table-wrap"><table>
-        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        <tr><td><code>GET</code></td><td><code>/api/v2/organizations</code></td><td>List all</td></tr>
-        <tr><td><code>POST</code></td><td><code>/api/v2/organizations</code></td><td>Create (auto-provisions SMTP server)</td></tr>
-        <tr><td><code>GET</code></td><td><code>/api/v2/organizations/:permalink</code></td><td>Get</td></tr>
-        <tr><td><code>PATCH</code></td><td><code>/api/v2/organizations/:permalink</code></td><td>Update</td></tr>
-        <tr><td><code>DELETE</code></td><td><code>/api/v2/organizations/:permalink</code></td><td>Delete</td></tr>
-        <tr><td><code>POST</code></td><td><code>/api/v2/organizations/:permalink/suspend</code></td><td>Suspend / unsuspend</td></tr>
-      </table></div>
-      <pre>{ "name": "Acme", "permalink": "acme", "time_zone": "UTC", "owner_email": "admin@acme.com" }</pre>
+      <div class="toc">
+        <strong style="font-size:.85rem; color:var(--text)">Jump to:</strong>
+        <a href="#ep-orgs">Organizations</a>
+        <a href="#ep-members">Members</a>
+        <a href="#ep-servers">Servers</a>
+        <a href="#ep-domains">Domains</a>
+        <a href="#ep-credentials">Credentials</a>
+        <a href="#ep-users">Users</a>
+      </div>
 
-      <h3>Members</h3>
-      <div class="table-wrap"><table>
-        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        <tr><td><code>GET</code></td><td><code>/api/v2/organizations/:org/members</code></td><td>List members</td></tr>
-        <tr><td><code>POST</code></td><td><code>/api/v2/organizations/:org/members</code></td><td>Add user to org</td></tr>
-        <tr><td><code>PATCH</code></td><td><code>/api/v2/organizations/:org/members/:user</code></td><td>Change role</td></tr>
-        <tr><td><code>DELETE</code></td><td><code>/api/v2/organizations/:org/members/:user</code></td><td>Remove member</td></tr>
-      </table></div>
-      <pre>{ "user_id": "user@example.com", "role": "member" }</pre>
+      <p>Base URL: <code>https://postal.example.com/api/v2</code>. All requests need <code>Authorization: Bearer &lt;token&gt;</code> and <code>Content-Type: application/json</code> on writes.</p>
+      <p>Pagination: <code>?page=1&amp;per_page=50</code> (max 200). Errors: <code>{"errors": ["Name can't be blank"]}</code> or <code>{"error": "forbidden"}</code>.</p>
 
-      <h3>Servers</h3>
-      <div class="table-wrap"><table>
-        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        <tr><td><code>GET / POST</code></td><td><code>/api/v2/organizations/:org/servers</code></td><td>List / create</td></tr>
-        <tr><td><code>GET / PATCH / DELETE</code></td><td><code>/api/v2/organizations/:org/servers/:server</code></td><td>Get / update / delete</td></tr>
-        <tr><td><code>POST</code></td><td><code>…/:server/suspend</code></td><td>Suspend / unsuspend</td></tr>
-      </table></div>
+      <!-- ── Organizations ── -->
+      <h3 id="ep-orgs">Organizations</h3>
 
-      <h3>Domains</h3>
-      <div class="table-wrap"><table>
-        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        <tr><td><code>GET / POST</code></td><td><code>…/:server/domains</code></td><td>List / add (returns DKIM record)</td></tr>
-        <tr><td><code>GET / DELETE</code></td><td><code>…/:server/domains/:uuid</code></td><td>Get (DKIM + DNS status) / delete</td></tr>
-        <tr><td><code>POST</code></td><td><code>…/domains/:uuid/verify</code></td><td>Force-mark verified</td></tr>
-        <tr><td><code>POST</code></td><td><code>…/domains/:uuid/dns_check</code></td><td>Re-check DNS records</td></tr>
-      </table></div>
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method GET">GET</span>
+          <span class="ep-path">/api/v2/organizations</span>
+          <span class="role role-any">any valid token</span>
+        </div>
+        <div class="ep-body">
+          <p><span class="role role-super">super-admin</span> returns all orgs. <span class="role role-admin">org-admin</span> / <span class="role role-member">member</span> / <span class="role role-any">readonly</span> returns only their own orgs.</p>
+          <pre>curl https://postal.example.com/api/v2/organizations \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
 
-      <h3>Credentials</h3>
-      <div class="table-wrap"><table>
-        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        <tr><td><code>GET / POST</code></td><td><code>…/:server/credentials</code></td><td>List / create (returns generated key)</td></tr>
-        <tr><td><code>GET / DELETE</code></td><td><code>…/:server/credentials/:uuid</code></td><td>Get / delete</td></tr>
-      </table></div>
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations</span>
+          <span class="role role-super">super-admin</span>
+        </div>
+        <div class="ep-body">
+          <p>Creates an org. Auto-provisions a Live SMTP server + default credential unless <code>skip_default_server: true</code>.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Acme",
+    "permalink": "acme",
+    "time_zone": "UTC",
+    "owner_email": "admin@acme.com",
+    "skip_default_server": false
+  }'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method GET">GET</span>
+          <span class="ep-path">/api/v2/organizations/:permalink</span>
+          <span class="role role-any">any valid token</span>
+        </div>
+        <div class="ep-body">
+          <p><span class="role role-super">super-admin</span>: any org. Others: only their orgs (404 if not a member).</p>
+          <pre>curl https://postal.example.com/api/v2/organizations/acme \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method PATCH">PATCH</span>
+          <span class="ep-path">/api/v2/organizations/:permalink</span>
+          <span class="role role-admin">org-admin</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X PATCH https://postal.example.com/api/v2/organizations/acme \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Acme Corp", "time_zone": "Europe/Paris"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method DELETE">DELETE</span>
+          <span class="ep-path">/api/v2/organizations/:permalink</span>
+          <span class="role role-super">super-admin</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X DELETE https://postal.example.com/api/v2/organizations/acme \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations/:permalink/suspend</span>
+          <span class="role role-super">super-admin</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/suspend \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "Payment overdue"}'
+
+# Unsuspend
+curl -X POST https://postal.example.com/api/v2/organizations/acme/unsuspend \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <!-- ── Members ── -->
+      <h3 id="ep-members">Members</h3>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method GET">GET</span>
+          <span class="ep-path">/api/v2/organizations/:org/members</span>
+          <span class="role role-any">any member of the org</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl https://postal.example.com/api/v2/organizations/acme/members \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations/:org/members</span>
+          <span class="role role-admin">org-admin</span>
+        </div>
+        <div class="ep-body">
+          <p><code>user_id</code> accepts UUID or email address. <code>role</code>: <code>admin</code>, <code>member</code> (default), <code>readonly</code>.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/members \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "auditor@acme.com", "role": "readonly"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method PATCH">PATCH</span>
+          <span class="ep-path">/api/v2/organizations/:org/members/:user</span>
+          <span class="role role-admin">org-admin</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X PATCH https://postal.example.com/api/v2/organizations/acme/members/auditor@acme.com \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"role": "member"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method DELETE">DELETE</span>
+          <span class="ep-path">/api/v2/organizations/:org/members/:user</span>
+          <span class="role role-admin">org-admin</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X DELETE https://postal.example.com/api/v2/organizations/acme/members/auditor@acme.com \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <!-- ── Servers ── -->
+      <h3 id="ep-servers">Servers</h3>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method GET">GET</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers</span>
+          <span class="role role-any">any member of the org</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl https://postal.example.com/api/v2/organizations/acme/servers \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <p><code>mode</code>: <code>Live</code> or <code>Test</code>.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/servers \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Production", "permalink": "production", "mode": "Live"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method PATCH">PATCH</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X PATCH https://postal.example.com/api/v2/organizations/acme/servers/production \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"send_limit": 5000, "message_retention_days": 30}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method DELETE">DELETE</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X DELETE https://postal.example.com/api/v2/organizations/acme/servers/production \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server/suspend</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/servers/production/suspend \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"reason": "Abuse detected"}'
+
+curl -X POST .../unsuspend -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <!-- ── Domains ── -->
+      <h3 id="ep-domains">Domains</h3>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server/domains</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <p>Response includes <code>dkim_record_name</code> and <code>dkim_record</code> for DNS setup.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/servers/production/domains \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "mail.acme.com"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/.../domains/:uuid/verify</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <p>Force-marks the domain as verified <strong>without checking DNS</strong>. Use when ownership was verified out-of-band (e.g., during automated tenant provisioning).</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/servers/production/domains/&lt;uuid&gt;/verify \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/.../domains/:uuid/dns_check</span>
+          <span class="role role-any">any member of the org</span>
+        </div>
+        <div class="ep-body">
+          <p>Re-runs DNS checks (SPF, DKIM, MX, return-path) and returns updated statuses.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/servers/production/domains/&lt;uuid&gt;/dns_check \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <!-- ── Credentials ── -->
+      <h3 id="ep-credentials">Credentials</h3>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server/credentials</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <p>Response includes the generated <code>key</code> — only returned on creation, not retrievable later.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/organizations/acme/servers/production/credentials \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "App mailer", "type": "SMTP"}'
+
+# Response:
+# { "id": "...", "name": "App mailer", "type": "SMTP", "key": "smtp+login://...", ... }</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method GET">GET</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server/credentials</span>
+          <span class="role role-any">any member of the org</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl https://postal.example.com/api/v2/organizations/acme/servers/production/credentials \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method DELETE">DELETE</span>
+          <span class="ep-path">/api/v2/organizations/:org/servers/:server/credentials/:uuid</span>
+          <span class="role role-member">member+</span>
+        </div>
+        <div class="ep-body">
+          <pre>curl -X DELETE https://postal.example.com/api/v2/organizations/acme/servers/production/credentials/&lt;uuid&gt; \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <!-- ── Users ── -->
+      <h3 id="ep-users">Users</h3>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method GET">GET</span>
+          <span class="ep-path">/api/v2/users</span>
+          <span class="role role-admin">org-admin+</span>
+        </div>
+        <div class="ep-body">
+          <p><span class="role role-super">super-admin</span>: all Postal users. <span class="role role-admin">org-admin</span>: only members of their orgs.</p>
+          <pre>curl "https://postal.example.com/api/v2/users?page=1&per_page=50" \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method POST">POST</span>
+          <span class="ep-path">/api/v2/users</span>
+          <span class="role role-admin">org-admin+</span>
+        </div>
+        <div class="ep-body">
+          <p><code>admin</code> field is ignored unless the caller is <span class="role role-super">super-admin</span>.</p>
+          <pre>curl -X POST https://postal.example.com/api/v2/users \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "Alice",
+    "last_name": "Smith",
+    "email_address": "alice@acme.com",
+    "time_zone": "UTC",
+    "password": "hunter2"
+  }'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method PATCH">PATCH</span>
+          <span class="ep-path">/api/v2/users/:id</span>
+          <span class="role role-admin">org-admin+</span>
+        </div>
+        <div class="ep-body">
+          <p><code>:id</code> accepts UUID or email. <span class="role role-admin">org-admin</span> can only update users in their orgs and cannot set <code>admin</code>.</p>
+          <pre>curl -X PATCH https://postal.example.com/api/v2/users/alice@acme.com \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"first_name": "Alicia"}'</pre>
+        </div>
+      </div>
+
+      <div class="endpoint-block">
+        <div class="ep-header">
+          <span class="method DELETE">DELETE</span>
+          <span class="ep-path">/api/v2/users/:id</span>
+          <span class="role role-super">super-admin</span>
+        </div>
+        <div class="ep-body">
+          <p>Permanently deletes the Postal user. To remove from an org without deleting, use the members endpoint instead.</p>
+          <pre>curl -X DELETE https://postal.example.com/api/v2/users/alice@acme.com \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SCIM ═══════════════ -->
+    <section id="scim">
+      <h2>SCIM v2 — per-tenant</h2>
+      <p>All SCIM endpoints are namespaced per org: <code>/scim/v2/tenants/:org_permalink/…</code>. Auth: static <code>Authorization: Bearer &lt;scim.bearer_token&gt;</code>.</p>
 
       <h3>Users</h3>
       <div class="table-wrap"><table>
         <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        <tr><td><code>GET / POST</code></td><td><code>/api/v2/users</code></td><td>List / create</td></tr>
-        <tr><td><code>GET / PATCH / DELETE</code></td><td><code>/api/v2/users/:id</code></td><td>Get / update / delete (by UUID or email)</td></tr>
+        <tr><td><code>GET</code></td><td><code>/scim/v2/tenants/:org/Users</code></td><td>List org members as SCIM users</td></tr>
+        <tr><td><code>POST</code></td><td><code>/scim/v2/tenants/:org/Users</code></td><td>Create user (if new) + add to org with optional <code>role</code></td></tr>
+        <tr><td><code>GET</code></td><td><code>/scim/v2/tenants/:org/Users/:id</code></td><td>Get user (scoped to org)</td></tr>
+        <tr><td><code>PUT / PATCH</code></td><td><code>/scim/v2/tenants/:org/Users/:id</code></td><td>Update user attrs + optional role change via Operations</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/scim/v2/tenants/:org/Users/:id</code></td><td>Remove from org; delete user globally if no other orgs</td></tr>
       </table></div>
 
-      <p style="margin-top:1rem">All list endpoints accept <code>?page=1&amp;per_page=50</code> (max 200). Errors: <code>{"errors": ["Name can't be blank"]}</code>.</p>
+      <pre># Create user in org with member role
+curl -X POST https://postal.example.com/scim/v2/tenants/acme/Users \
+  -H "Authorization: Bearer $SCIM_TOKEN" \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+    "userName": "bob@acme.com",
+    "name": { "givenName": "Bob", "familyName": "Jones" },
+    "emails": [{ "value": "bob@acme.com", "primary": true }],
+    "role": "member"
+  }'</pre>
+
+      <h3>Groups (= the org)</h3>
+      <p>No <code>POST</code> or <code>DELETE</code> — org lifecycle is managed via API v2. <code>PATCH</code> handles org attributes <em>and</em> members in one request.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET</code></td><td><code>/scim/v2/tenants/:org/Groups</code></td><td>Returns the org as a SCIM group</td></tr>
+        <tr><td><code>GET</code></td><td><code>/scim/v2/tenants/:org/Groups/:id</code></td><td>Get the org group</td></tr>
+        <tr><td><code>PUT / PATCH</code></td><td><code>/scim/v2/tenants/:org/Groups/:id</code></td><td>Update org name, time_zone, permalink + manage members</td></tr>
+      </table></div>
+
+      <pre># Update org name + add a member + change a role in one request
+curl -X PATCH https://postal.example.com/scim/v2/tenants/acme/Groups/42 \
+  -H "Authorization: Bearer $SCIM_TOKEN" \
+  -H "Content-Type: application/scim+json" \
+  -d '{
+    "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+    "displayName": "Acme Corporation",
+    "urn:postal:1.0:org": { "time_zone": "Europe/Paris" },
+    "Operations": [
+      { "op": "add",    "path": "members", "value": [{ "value": "alice@acme.com", "role": "admin" }] },
+      { "op": "remove", "path": "members", "value": [{ "value": "old@acme.com" }] }
+    ]
+  }'</pre>
+
+      <h4>urn:postal:1.0:org extension fields</h4>
+      <div class="table-wrap"><table>
+        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td><code>permalink</code></td><td>string</td><td>Org slug (URL identifier)</td></tr>
+        <tr><td><code>time_zone</code></td><td>string</td><td>Rails time zone name (e.g. <code>Europe/Paris</code>)</td></tr>
+        <tr><td><code>status</code></td><td>string</td><td>Read-only: <code>active</code> or <code>suspended</code></td></tr>
+      </table></div>
     </section>
 
+    <!-- ═══════════════ ROLES ═══════════════ -->
     <section id="roles">
       <h2>Member roles</h2>
       <div class="table-wrap"><table>
-        <tr><th>Permission</th><th style="text-align:center">admin</th><th style="text-align:center">member</th><th style="text-align:center">readonly</th></tr>
-        <tr><td>Edit org settings</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
-        <tr><td>Create / delete servers</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
-        <tr><td>Create / delete domains &amp; credentials</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
-        <tr><td>Manage routes, webhooks, endpoints</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
-        <tr><td>View messages, logs, stats</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr>
+          <th>Permission</th>
+          <th style="text-align:center"><span class="role role-super">super-admin</span></th>
+          <th style="text-align:center"><span class="role role-admin">admin</span></th>
+          <th style="text-align:center"><span class="role role-member">member</span></th>
+          <th style="text-align:center"><span class="role role-any">readonly</span></th>
+        </tr>
+        <tr><td>Create / delete orgs</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>Suspend / unsuspend orgs</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>Edit org settings</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>Manage members (add/remove/role)</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>Create / delete / suspend servers</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>Create / delete domains &amp; credentials</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>Manage routes, webhooks, endpoints</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>View messages, logs, stats</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>List / update users (scoped to org)</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>Delete users globally</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
       </table></div>
-      <pre style="margin-top:1rem">curl -X POST https://postal.example.com/api/v2/organizations/acme/members \
-  -H "Authorization: Bearer &lt;token&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"user_id": "auditor@example.com", "role": "readonly"}'</pre>
+
+      <p style="margin-top:.8rem">Roles are enforced on both the API v2 and the web UI. <span class="role role-any">readonly</span> users see everything but cannot write.</p>
+    </section>
+
+    <!-- ═══════════════ OIDC ═══════════════ -->
+    <section id="oidc">
+      <h2>SSO / OIDC provisioning</h2>
+
+      <h3>JIT user provisioning</h3>
+      <p>When a user logs in via SSO and does not exist in Postal, they are automatically created (<em>JIT provisioning</em>). Name and email are read from the JWT claims (<code>given_name</code>, <code>family_name</code>, <code>email</code>).</p>
+
+      <h3>Auto-create org on signup</h3>
+      <p>Enable <code>oidc.auto_create_org_on_signup: true</code>. When a brand-new user is JIT-provisioned, Postal automatically creates an org named after their <code>preferred_username</code> (or email prefix if absent). The slug is parameterized and deduplicated if taken.</p>
+      <pre>oidc:
+  auto_create_org_on_signup: true
+
+# alice.smith@example.com logs in for the first time
+# → user created
+# → org "alice-smith" created (Live SMTP server + default credential auto-provisioned)
+# → alice is org admin</pre>
+
+      <h3>Org provisioning from JWT claim</h3>
+      <p>Enable <code>oidc.auto_provision_org: true</code>. On every login, Postal reads the <code>organization</code> claim and creates/joins the org:</p>
+      <pre># JWT claim — Keycloak can send a custom claim:
+"organization": { "acme": { "name": "Acme Corp" } }
+# or as array:
+"organization": ["acme", "beta-corp"]</pre>
+      <p>Both options can be active at the same time: auto-create on first login + sync from claim on every login.</p>
     </section>
 
   </div>
