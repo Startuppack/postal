@@ -107,6 +107,7 @@ Rails.application.routes.draw do
   if Postal::Config.api.enabled?
     namespace :api do
       namespace :v2 do
+        post "oauth/token", to: "oauth#token"
         resources :organizations, only: [:index, :show, :create, :update, :destroy] do
           member do
             post :suspend

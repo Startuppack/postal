@@ -15,11 +15,40 @@ module Api
       private
 
       def authenticate!
-        token = request.headers["Authorization"]&.delete_prefix("Bearer ")&.strip
-        unless token.present? &&
-               ActiveSupport::SecurityUtils.secure_compare(token, Postal::Config.api.bearer_token.to_s)
-          render json: { error: "Unauthorized" }, status: :unauthorized
+        raw = request.headers["Authorization"]&.delete_prefix("Bearer ")&.strip
+        return render_unauthorized("Missing token") unless raw.present?
+
+        begin
+          payload, = JWT.decode(raw, Postal::Config.api.jwt_secret.to_s, true, { algorithms: ["HS256"] })
+          @current_token_payload = payload
+        rescue JWT::ExpiredSignature
+          render_unauthorized("Token expired")
+        rescue JWT::DecodeError => e
+          render_unauthorized(e.message)
         end
+      end
+
+      def current_token_payload
+        @current_token_payload
+      end
+
+      def token_scope
+        current_token_payload&.fetch("scope", nil)
+      end
+
+      def admin_token?
+        token_scope == "admin"
+      end
+
+      def token_user
+        return @token_user if defined?(@token_user)
+
+        user_id = current_token_payload&.fetch("user_id", nil)
+        @token_user = user_id ? User.find_by(id: user_id) : nil
+      end
+
+      def render_unauthorized(message = "Unauthorized")
+        render json: { error: "unauthorized", error_description: message }, status: :unauthorized
       end
 
       def render_not_found

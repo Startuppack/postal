@@ -645,8 +645,22 @@ module Postal
         default false
       end
 
-      string :bearer_token do
-        description "Bearer token required to authenticate API v2 requests (Authorization: Bearer <token>)"
+      string :jwt_secret do
+        description "Secret key used to sign and verify JWT tokens for API v2 (min 32 chars recommended)"
+      end
+
+      string :client_id do
+        description "OAuth2 client_id for the client_credentials grant (service-to-service)"
+        default "postal-admin"
+      end
+
+      string :client_secret do
+        description "OAuth2 client_secret for the client_credentials grant"
+      end
+
+      integer :token_ttl do
+        description "JWT access token lifetime in seconds"
+        default 3600
       end
     end
   end
