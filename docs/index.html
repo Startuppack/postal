@@ -71,6 +71,7 @@
   <span class="badge">Startup Pack fork</span>
   <nav>
     <a href="#api">API v2</a>
+    <a href="#auth">Auth</a>
     <a href="#roles">Roles</a>
     <a href="#config">Config</a>
     <a href="https://github.com/Startuppack/postal">GitHub</a>
@@ -113,14 +114,126 @@
 
     <section id="config">
       <h2>Configuration</h2>
-      <p>Add to your <code>postal.yml</code>:</p>
+      <p>Add to your <code>postal.yml</code>. The only required field is <code>oidc.issuer</code> — Postal fetches public keys automatically.</p>
       <pre>api:
   enabled: true
-  bearer_token: &lt;your-secret-token&gt;
+  required_azp: my-service-account   # optional — restrict to one KC/Entra/Google client
+
+oidc:
+  issuer: https://login.example.com/realms/myrealm   # must match the 'iss' claim in your JWTs
 
 scim:
   enabled: true
   bearer_token: &lt;scim-token&gt;</pre>
+    </section>
+
+    <section id="auth">
+      <h2>Authentication</h2>
+      <p>
+        Postal acts as a <strong>Resource Server</strong> — it never issues tokens itself.
+        Your identity provider (Keycloak, Microsoft Entra, or Google) issues a JWT via the
+        <code>client_credentials</code> grant. Postal verifies it using the provider's public keys,
+        fetched automatically from <code>{issuer}/.well-known/openid-configuration</code> and cached for 1 hour.
+        No secret is stored in Postal.
+      </p>
+      <p style="margin-top:.6rem">Every API request must include:</p>
+      <pre>Authorization: Bearer &lt;access_token&gt;</pre>
+
+      <h3 style="margin-top:2rem; color: var(--accent)">Keycloak</h3>
+
+      <p><strong>1. Create a service-account client</strong></p>
+      <p>In your realm → <em>Clients</em> → <em>Create client</em>:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Client ID</td><td><code>postal-api</code> (or any name)</td></tr>
+        <tr><td>Client authentication</td><td>ON</td></tr>
+        <tr><td>Authentication flow</td><td>Service accounts roles only</td></tr>
+      </table></div>
+      <p>Copy the <em>Client secret</em> from the <em>Credentials</em> tab.</p>
+
+      <p><strong>2. Get a token</strong></p>
+      <pre>curl -s -X POST \
+  https://login.example.com/realms/myrealm/protocol/openid-connect/token \
+  -d grant_type=client_credentials \
+  -d client_id=postal-api \
+  -d client_secret=&lt;secret&gt; \
+  | jq -r .access_token</pre>
+
+      <p><strong>3. Configure Postal</strong></p>
+      <pre>oidc:
+  issuer: https://login.example.com/realms/myrealm
+
+api:
+  enabled: true
+  required_azp: postal-api   # the client_id above</pre>
+
+      <p>The JWKS URI is auto-discovered. No other config needed.</p>
+
+      <h3 style="margin-top:2rem; color: var(--accent2)">Microsoft Entra (Azure AD)</h3>
+
+      <p><strong>1. Register an application</strong></p>
+      <p>Azure Portal → <em>App registrations</em> → <em>New registration</em>. Then:</p>
+      <ul>
+        <li><em>Certificates &amp; secrets</em> → <em>New client secret</em> → copy the value</li>
+        <li><em>Expose an API</em> → <em>Add a scope</em> (e.g. <code>postal.admin</code>) — or use the default <code>.default</code> scope</li>
+      </ul>
+      <p>Note your <strong>Application (client) ID</strong> and <strong>Directory (tenant) ID</strong>.</p>
+
+      <p><strong>2. Get a token</strong></p>
+      <pre>curl -s -X POST \
+  https://login.microsoftonline.com/&lt;tenant_id&gt;/oauth2/v2.0/token \
+  -d grant_type=client_credentials \
+  -d client_id=&lt;app_id&gt; \
+  -d client_secret=&lt;secret&gt; \
+  -d scope=&lt;app_id&gt;/.default \
+  | jq -r .access_token</pre>
+
+      <p><strong>3. Configure Postal</strong></p>
+      <pre>oidc:
+  issuer: https://login.microsoftonline.com/&lt;tenant_id&gt;/v2.0
+
+api:
+  enabled: true
+  required_azp: &lt;app_id&gt;   # Application (client) ID</pre>
+
+      <p>Postal will auto-discover JWKS from <code>https://login.microsoftonline.com/&lt;tenant_id&gt;/v2.0/.well-known/openid-configuration</code>.</p>
+
+      <h3 style="margin-top:2rem; color: #ea4335">Google</h3>
+
+      <p><strong>1. Create a service account</strong></p>
+      <p>Google Cloud Console → <em>IAM &amp; Admin</em> → <em>Service Accounts</em> → <em>Create</em>. Then:</p>
+      <ul>
+        <li>Go to the service account → <em>Keys</em> → <em>Add key</em> → JSON → download</li>
+        <li>Note the <code>client_email</code> and <code>client_id</code> from the JSON file</li>
+      </ul>
+
+      <p><strong>2. Get a token</strong> (using the Google auth library or <code>oauth2l</code>)</p>
+      <pre># with oauth2l (https://github.com/google/oauth2l)
+oauth2l fetch --credentials service-account.json --scope openid email
+
+# or with Python google-auth
+python3 - &lt;&lt;'EOF'
+import google.auth, google.auth.transport.requests
+creds, _ = google.auth.default(scopes=["openid","email"])
+creds.refresh(google.auth.transport.requests.Request())
+print(creds.token)
+EOF</pre>
+
+      <p><strong>3. Configure Postal</strong></p>
+      <pre>oidc:
+  issuer: https://accounts.google.com
+  jwks_uri: https://www.googleapis.com/oauth2/v3/certs   # optional, auto-discovered
+
+api:
+  enabled: true
+  required_azp: &lt;client_id from service-account.json&gt;</pre>
+
+      <div class="table-wrap" style="margin-top:1.5rem"><table>
+        <tr><th>Provider</th><th>Issuer (<code>iss</code>)</th><th>JWKS (auto-discovered)</th><th>Algorithm</th></tr>
+        <tr><td>Keycloak</td><td><code>{host}/realms/{realm}</code></td><td>via <code>/.well-known/openid-configuration</code></td><td>RS256</td></tr>
+        <tr><td>Microsoft Entra</td><td><code>https://login.microsoftonline.com/{tenant}/v2.0</code></td><td>via <code>/.well-known/openid-configuration</code></td><td>RS256</td></tr>
+        <tr><td>Google</td><td><code>https://accounts.google.com</code></td><td>via <code>/.well-known/openid-configuration</code></td><td>RS256</td></tr>
+      </table></div>
     </section>
 
     <section id="api">
