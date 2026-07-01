@@ -15,7 +15,23 @@
 
 class OrganizationUser < ApplicationRecord
 
+  ROLES = %w[admin member readonly].freeze
+
   belongs_to :organization
   belongs_to :user, polymorphic: true, optional: true
+
+  validates :role, inclusion: { in: ROLES }, allow_nil: true
+
+  def admin?
+    role == "admin"
+  end
+
+  def readonly?
+    role == "readonly"
+  end
+
+  def member?
+    role == "member"
+  end
 
 end

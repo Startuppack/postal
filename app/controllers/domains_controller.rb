@@ -4,6 +4,7 @@ class DomainsController < ApplicationController
 
   include WithinOrganization
 
+  before_action :require_write_access!, only: [:new, :create, :destroy, :verify, :check]
   before_action do
     if params[:server_id]
       @server = organization.servers.present.find_by_permalink!(params[:server_id])

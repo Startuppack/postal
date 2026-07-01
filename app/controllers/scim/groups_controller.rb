@@ -23,12 +23,17 @@ module Scim
       if org.new_record?
         org.name = name
         owner = owner_id ? User.find_by(id: owner_id) : nil
-        if owner.nil?
-          owner = User.first
-        end
+        owner ||= User.first
         org.owner = owner
         org.save!
-        org.organization_users.create!(user: owner, user_type: "User", admin: true, all_servers: true) if owner
+        if owner
+          org.organization_users.create!(user: owner, user_type: "User",
+                                         role: "admin", admin: true, all_servers: true)
+        end
+        # Auto-create a default SMTP server for the org
+        server = org.servers.new(name: org.name, mode: "Live")
+        server.save!
+        server.credentials.create!(name: "Default SMTP", type: "SMTP")
       end
 
       sync_members(org, body_params["members"])
@@ -101,7 +106,15 @@ module Scim
         next unless user
         next if org.organization_users.where(user: user, user_type: "User").exists?
 
-        org.organization_users.create!(user: user, user_type: "User", admin: true, all_servers: true)
+        role = m["role"].to_s.presence
+        role = "member" unless OrganizationUser::ROLES.include?(role)
+        org.organization_users.create!(
+          user: user,
+          user_type: "User",
+          role: role,
+          admin: role == "admin",
+          all_servers: role != "readonly"
+        )
       end
     end
 

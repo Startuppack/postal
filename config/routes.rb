@@ -112,6 +112,7 @@ Rails.application.routes.draw do
             post :suspend
             post :unsuspend
           end
+          resources :members, controller: "organization_members", only: [:index, :create, :update, :destroy]
           resources :servers, only: [:index, :show, :create, :update, :destroy] do
             member do
               post :suspend

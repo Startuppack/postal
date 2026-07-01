@@ -20,7 +20,17 @@ module Api
         org = Organization.new(org_params)
         org.owner = owner
         org.save!
-        org.organization_users.create!(user: owner, admin: true, all_servers: true)
+        org.organization_users.create!(user: owner, user_type: "User",
+                                       role: "admin", admin: true, all_servers: true)
+
+        # Auto-provision a default SMTP server with the same name as the org
+        unless params[:skip_default_server]
+          server = org.servers.new(name: org.name, mode: "Live")
+          server.save!
+          # Generate a default SMTP credential for the server
+          server.credentials.create!(name: "Default SMTP", type: "SMTP")
+        end
+
         render json: serialize(org), status: :created
       end
 
