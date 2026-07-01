@@ -7,9 +7,8 @@ module Api
       before_action :set_organization
       before_action :set_server, only: [:index, :show, :create, :destroy, :verify, :dns_check]
       before_action :set_domain, only: [:show, :destroy, :verify, :dns_check]
+      before_action(only: [:create, :destroy, :verify]) { require_org_write!(@organization) }
 
-      # GET /api/v2/organizations/:org/servers/:server_id/domains
-      # GET /api/v2/organizations/:org/domains  (org-level domains)
       def index
         scope = @server ? @server.domains : @organization.domains
         render json: paginate(scope.order(:name)).map { |d| serialize(d) }
@@ -31,19 +30,12 @@ module Api
         head :no_content
       end
 
-      # POST /api/v2/.../domains/:id/verify
-      # Force-marks the domain as verified (skips DNS check).
+      # Force-marks the domain as verified without DNS check — super admin or org write.
       def verify
-        if @domain.verified?
-          render json: serialize(@domain)
-        else
-          @domain.update_columns(verified_at: Time.now)
-          render json: serialize(@domain), status: :ok
-        end
+        @domain.update_columns(verified_at: Time.now) unless @domain.verified?
+        render json: serialize(@domain)
       end
 
-      # POST /api/v2/.../domains/:id/dns_check
-      # Runs the DNS check and returns the current record statuses.
       def dns_check
         @domain.check_dns
         render json: serialize(@domain)
@@ -52,7 +44,7 @@ module Api
       private
 
       def set_organization
-        @organization = Organization.present.find_by!(permalink: params[:organization_id])
+        @organization = organizations_scope.find_by!(permalink: params[:organization_id])
       end
 
       def set_server
@@ -72,27 +64,27 @@ module Api
 
       def serialize(domain)
         {
-          id:                  domain.uuid,
-          name:                domain.name,
-          verified:            domain.verified?,
-          verified_at:         domain.verified_at,
-          outgoing:            domain.outgoing,
-          incoming:            domain.incoming,
-          verification_method: domain.verification_method,
+          id:                      domain.uuid,
+          name:                    domain.name,
+          verified:                domain.verified?,
+          verified_at:             domain.verified_at,
+          outgoing:                domain.outgoing,
+          incoming:                domain.incoming,
+          verification_method:     domain.verification_method,
           dns_verification_string: domain.dns_verification_string,
-          dkim_record_name:    domain.dkim_record_name,
-          dkim_record:         domain.dkim_record,
-          spf_status:          domain.spf_status,
-          spf_error:           domain.spf_error,
-          dkim_status:         domain.dkim_status,
-          dkim_error:          domain.dkim_error,
-          mx_status:           domain.mx_status,
-          mx_error:            domain.mx_error,
-          return_path_status:  domain.return_path_status,
-          return_path_error:   domain.return_path_error,
-          dns_checked_at:      domain.dns_checked_at,
-          created_at:          domain.created_at,
-          updated_at:          domain.updated_at
+          dkim_record_name:        domain.dkim_record_name,
+          dkim_record:             domain.dkim_record,
+          spf_status:              domain.spf_status,
+          spf_error:               domain.spf_error,
+          dkim_status:             domain.dkim_status,
+          dkim_error:              domain.dkim_error,
+          mx_status:               domain.mx_status,
+          mx_error:                domain.mx_error,
+          return_path_status:      domain.return_path_status,
+          return_path_error:       domain.return_path_error,
+          dns_checked_at:          domain.dns_checked_at,
+          created_at:              domain.created_at,
+          updated_at:              domain.updated_at
         }
       end
 

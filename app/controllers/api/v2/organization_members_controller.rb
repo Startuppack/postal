@@ -6,14 +6,13 @@ module Api
 
       before_action :set_organization
       before_action :set_member, only: [:update, :destroy]
+      before_action(only: [:create, :update, :destroy]) { require_org_admin!(@organization) }
 
       def index
         members = @organization.organization_users.where(user_type: "User").includes(:user)
         render json: members.map { |ou| serialize(ou) }
       end
 
-      # POST /api/v2/organizations/:org/members
-      # Body: { user_id: "<uuid or email>", role: "admin|member|readonly" }
       def create
         user = find_user!(params[:user_id])
         return if performed?
@@ -26,22 +25,20 @@ module Api
 
         role = valid_role(params.fetch(:role, "member"))
         ou = @organization.organization_users.create!(
-          user: user,
-          user_type: "User",
-          role: role,
-          admin: role == "admin",
+          user:        user,
+          user_type:   "User",
+          role:        role,
+          admin:       role == "admin",
           all_servers: role != "readonly"
         )
         render json: serialize(ou), status: :created
       end
 
-      # PATCH /api/v2/organizations/:org/members/:id
-      # Body: { role: "admin|member|readonly" }
       def update
         role = valid_role(params[:role])
         @member.update!(
-          role: role,
-          admin: role == "admin",
+          role:        role,
+          admin:       role == "admin",
           all_servers: role != "readonly"
         )
         render json: serialize(@member)
@@ -55,12 +52,13 @@ module Api
       private
 
       def set_organization
-        @organization = Organization.present.find_by!(permalink: params[:organization_id])
+        @organization = organizations_scope.find_by!(permalink: params[:organization_id])
       end
 
       def set_member
         user = find_user!(params[:id])
         return if performed?
+
         @member = @organization.organization_users.find_by!(user: user, user_type: "User")
       end
 
@@ -73,7 +71,7 @@ module Api
       def valid_role(role)
         role = role.to_s.presence || "member"
         unless OrganizationUser::ROLES.include?(role)
-          render json: { errors: ["role must be one of: #{OrganizationUser::ROLES.join(', ')}"] },
+          render json: { errors: ["role must be one of: #{OrganizationUser::ROLES.join(", ")}"] },
                  status: :unprocessable_entity
           return "member"
         end

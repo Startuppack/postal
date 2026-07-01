@@ -7,6 +7,7 @@ module Api
       before_action :set_organization
       before_action :set_server
       before_action :set_credential, only: [:show, :destroy]
+      before_action(only: [:create, :destroy]) { require_org_write!(@organization) }
 
       def index
         render json: paginate(@server.credentials.order(:name)).map { |c| serialize(c) }
@@ -30,7 +31,7 @@ module Api
       private
 
       def set_organization
-        @organization = Organization.present.find_by!(permalink: params[:organization_id])
+        @organization = organizations_scope.find_by!(permalink: params[:organization_id])
       end
 
       def set_server

@@ -23,16 +23,16 @@ module Api
 
         issuer = Postal::Config.oidc.issuer.to_s
         if issuer.blank?
-          return render json: { error: "server_error", error_description: "OIDC issuer not configured" },
+          return render json: { error: "server_error", error_description: "oidc.issuer not configured" },
                         status: :internal_server_error
         end
 
         begin
           payload, = JWT.decode(raw, nil, true, {
-            algorithms:  ["RS256"],
-            jwks:        ->(opts) { fetch_jwks(opts) },
-            iss:         issuer,
-            verify_iss:  true
+            algorithms: ["RS256"],
+            jwks:       ->(opts) { fetch_jwks(opts) },
+            iss:        issuer,
+            verify_iss: true
           })
           @current_token_payload = payload
         rescue JWT::ExpiredSignature
@@ -42,17 +42,69 @@ module Api
         end
 
         required_azp = Postal::Config.api.required_azp.to_s
-        if required_azp.present? && @current_token_payload["azp"].to_s != required_azp
-          return render json: { error: "forbidden", error_description: "azp mismatch" }, status: :forbidden
+        if required_azp.present? && @current_token_payload["azp"].to_s == required_azp
+          # Service-account token → super admin
+          @api_admin = true
+        else
+          # User token → resolve Postal user from email claim
+          email = @current_token_payload["email"].presence ||
+                  @current_token_payload["preferred_username"].presence
+          @current_api_user = email ? User.find_by(email_address: email) : nil
+          unless @current_api_user
+            return render json: { error: "forbidden",
+                                  error_description: "No Postal user found for this token" },
+                          status: :forbidden
+          end
+          @api_admin = @current_api_user.admin?
         end
       end
 
-      def current_token_payload
-        @current_token_payload
+      # True when the token belongs to the configured service account.
+      def api_admin?
+        @api_admin
       end
 
-      # Fetch JWKS from Keycloak, auto-discovered via OIDC discovery or jwks_uri config.
-      # Caches for 1 hour; busts cache on unknown kid (key rotation).
+      # Postal user resolved from the JWT (nil for service-account tokens).
+      def current_api_user
+        @current_api_user
+      end
+
+      # Organization scope: all orgs for admins, own orgs for users.
+      def organizations_scope
+        api_admin? ? Organization.present : current_api_user.organizations.present
+      end
+
+      # Abort unless token is the super-admin service account.
+      def require_superadmin!
+        return if api_admin?
+
+        render json: { error: "forbidden", error_description: "Super-admin access required" },
+               status: :forbidden
+      end
+
+      # Abort if the current user has readonly role in the org.
+      def require_org_write!(org)
+        return if api_admin?
+
+        ou = org.organization_users.find_by(user: current_api_user, user_type: "User")
+        if ou.nil? || ou.readonly?
+          render json: { error: "forbidden", error_description: "Write access required" },
+                 status: :forbidden
+        end
+      end
+
+      # Abort unless the current user is org admin (or super admin).
+      def require_org_admin!(org)
+        return if api_admin?
+
+        ou = org.organization_users.find_by(user: current_api_user, user_type: "User")
+        unless ou&.admin?
+          render json: { error: "forbidden", error_description: "Organization admin access required" },
+                 status: :forbidden
+        end
+      end
+
+      # Fetch JWKS from Keycloak via OIDC discovery. Caches 1 h; busts on unknown kid.
       def fetch_jwks(opts = {})
         Rails.cache.delete("postal_api_v2_jwks") if opts[:kid_not_found]
         Rails.cache.fetch("postal_api_v2_jwks", expires_in: 1.hour) do
@@ -61,11 +113,9 @@ module Api
       end
 
       def resolve_jwks_uri
-        # 1. Explicit config
         explicit = Postal::Config.oidc.jwks_uri.to_s
         return explicit if explicit.present?
 
-        # 2. OIDC discovery (default for Keycloak)
         issuer = Postal::Config.oidc.issuer.to_s.chomp("/")
         discovery = Rails.cache.fetch("postal_oidc_discovery", expires_in: 1.hour) do
           JSON.parse(Net::HTTP.get(URI("#{issuer}/.well-known/openid-configuration")))

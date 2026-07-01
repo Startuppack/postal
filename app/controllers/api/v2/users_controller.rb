@@ -4,11 +4,11 @@ module Api
   module V2
     class UsersController < BaseController
 
+      before_action { require_superadmin! }
       before_action :set_user, only: [:show, :update, :destroy]
 
       def index
-        users = paginate(User.order(:email_address))
-        render json: users.map { |u| serialize(u) }
+        render json: paginate(User.order(:email_address)).map { |u| serialize(u) }
       end
 
       def show
@@ -35,8 +35,7 @@ module Api
       private
 
       def set_user
-        @user = User.find_by(uuid: params[:id]) ||
-                User.find_by!(email_address: params[:id])
+        @user = User.find_by(uuid: params[:id]) || User.find_by!(email_address: params[:id])
       end
 
       def user_params
@@ -54,10 +53,7 @@ module Api
           created_at:    user.created_at,
           updated_at:    user.updated_at,
           organizations: user.organizations.present.map { |o|
-            {
-              permalink: o.permalink,
-              name:      o.name
-            }
+            { permalink: o.permalink, name: o.name }
           }
         }
       end

@@ -5,10 +5,11 @@ module Api
     class OrganizationsController < BaseController
 
       before_action :set_organization, only: [:show, :update, :destroy, :suspend, :unsuspend]
+      before_action(only: [:create, :destroy, :suspend, :unsuspend]) { require_superadmin! }
+      before_action(only: [:update]) { require_org_admin!(@organization) }
 
       def index
-        orgs = paginate(Organization.present.order(:name))
-        render json: orgs.map { |o| serialize(o) }
+        render json: paginate(organizations_scope.order(:name)).map { |o| serialize(o) }
       end
 
       def show
@@ -23,11 +24,9 @@ module Api
         org.organization_users.create!(user: owner, user_type: "User",
                                        role: "admin", admin: true, all_servers: true)
 
-        # Auto-provision a default SMTP server with the same name as the org
         unless params[:skip_default_server]
           server = org.servers.new(name: org.name, mode: "Live")
           server.save!
-          # Generate a default SMTP credential for the server
           server.credentials.create!(name: "Default SMTP", type: "SMTP")
         end
 
@@ -57,7 +56,7 @@ module Api
       private
 
       def set_organization
-        @organization = Organization.present.find_by!(permalink: params[:id])
+        @organization = organizations_scope.find_by!(permalink: params[:id])
       end
 
       def org_params
@@ -66,16 +65,16 @@ module Api
 
       def serialize(org)
         {
-          id:               org.uuid,
-          permalink:        org.permalink,
-          name:             org.name,
-          time_zone:        org.time_zone,
-          status:           org.status,
-          owner_email:      org.owner&.email_address,
-          suspended_at:     org.suspended_at,
+          id:                org.uuid,
+          permalink:         org.permalink,
+          name:              org.name,
+          time_zone:         org.time_zone,
+          status:            org.status,
+          owner_email:       org.owner&.email_address,
+          suspended_at:      org.suspended_at,
           suspension_reason: org.suspension_reason,
-          created_at:       org.created_at,
-          updated_at:       org.updated_at
+          created_at:        org.created_at,
+          updated_at:        org.updated_at
         }
       end
 
