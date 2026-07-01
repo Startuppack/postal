@@ -135,27 +135,60 @@
         <div class="card"><div class="icon">⚡</div><h3>Auto SMTP server</h3><p>Creating an org via API or SCIM automatically provisions a Live SMTP server + credential.</p></div>
         <div class="card"><div class="icon">🔐</div><h3>SCIM v2 per-tenant</h3><p><code>/scim/v2/tenants/:org/Users</code> — users and org params managed per tenant.</p></div>
         <div class="card"><div class="icon">🚀</div><h3>SSO auto-org</h3><p>New SSO users get a default org created automatically from their username.</p></div>
+        <div class="card"><div class="icon">🔓</div><h3>Multi-provider OIDC</h3><p>Multiple IdPs (Keycloak, Entra, Google…) — one login button per provider, each with its own JWKS cache.</p></div>
+        <div class="card"><div class="icon">🚪</div><h3>BCL &amp; RP logout</h3><p>Back-Channel Logout invalidates Postal sessions when the IdP logs a user out. RP-Initiated Logout redirects to the IdP <code>end_session_endpoint</code> on sign-out.</p></div>
       </div>
     </section>
 
     <!-- ═══════════════ CONFIG ═══════════════ -->
     <section id="config">
       <h2>Configuration</h2>
-      <p>Add to <code>postal.yml</code>. Postal fetches Keycloak public keys automatically — no secret stored locally.</p>
+      <p>Add to <code>postal.yml</code>. Postal fetches IdP public keys automatically via JWKS — no signing secret stored locally.</p>
+
+      <h3>Single provider (legacy / simple setup)</h3>
       <pre>api:
   enabled: true
-  required_azp: postal-api          # optional — restrict to one specific KC/Entra/Google client
+  required_azp: postal-api          # optional — restrict to one specific KC client
 
 oidc:
   enabled: true
+  name: "Login with Keycloak"
   issuer: https://login.example.com/realms/myrealm  # must match 'iss' in your JWTs
-  # jwks_uri: ...                   # optional override; auto-discovered from issuer
-  auto_create_org_on_signup: true   # create a default org for new SSO users
-  auto_provision_org: false         # create/join orgs from the 'organization' JWT claim
+  identifier: postal                # OAuth2 client_id — required for the SSO login button
+  secret: &lt;client_secret&gt;          # required for the SSO login button; omit if API-only
+  # jwks_uri: ...                   # override; auto-discovered from issuer by default
+  auto_create_org_on_signup: true
+  auto_provision_org: false
 
 scim:
   enabled: true
   bearer_token: &lt;scim-static-token&gt;</pre>
+
+      <h3>Multiple providers</h3>
+      <p>Use the <code>oidc.providers</code> array to register several IdPs. Each gets its own login button, JWKS cache, and discovery document.</p>
+      <pre>oidc:
+  enabled: true
+  providers:
+    - id: keycloak
+      display_name: "Login with Keycloak"
+      issuer: https://login.example.com/realms/myrealm
+      identifier: postal
+      secret: &lt;client_secret&gt;
+      scopes: [openid, email]
+
+    - id: entra
+      display_name: "Login with Microsoft"
+      issuer: https://login.microsoftonline.com/&lt;tenant_id&gt;/v2.0
+      identifier: &lt;app_id&gt;
+      secret: &lt;app_secret&gt;
+      scopes: [openid, email, profile]
+
+    - id: google
+      display_name: "Login with Google"
+      issuer: https://accounts.google.com
+      identifier: &lt;client_id&gt;.apps.googleusercontent.com
+      secret: &lt;client_secret&gt;</pre>
+      <p><strong>identifier / secret are only required for the SSO login button</strong> (Authorization Code flow). For API JWT verification and BCL, Postal only needs <code>issuer</code> (public JWKS). Omit them if the provider is used for token validation only.</p>
     </section>
 
     <!-- ═══════════════ AUTH ═══════════════ -->
@@ -755,6 +788,32 @@ curl -X PATCH https://postal.example.com/scim/v2/tenants/acme/Groups/42 \
 # or as array:
 "organization": ["acme", "beta-corp"]</pre>
       <p>Both options can be active at the same time: auto-create on first login + sync from claim on every login.</p>
+
+      <h3>Back-Channel Logout (BCL)</h3>
+      <p>
+        When a user logs out of the IdP (or is force-logged-out), the IdP POSTs a signed
+        <code>logout_token</code> to Postal. Postal validates the RS256 signature against the provider's
+        JWKS, then invalidates all active Postal sessions for that user.
+      </p>
+      <p><strong>Endpoint:</strong> <code>POST /auth/oidc/backchannel_logout</code> (no authentication header required — the logout_token itself is the proof).</p>
+      <p><strong>Configure in Keycloak:</strong> Realm → Clients → <em>your client</em> → Advanced → <em>Backchannel logout URL</em>:</p>
+      <pre>https://postal.example.com/auth/oidc/backchannel_logout</pre>
+      <p>Enable <em>Backchannel logout session required</em> so Keycloak always includes <code>sid</code> and <code>sub</code> in the logout_token.</p>
+      <p>With multiple providers, the single endpoint handles all of them — Postal identifies the provider from the <code>iss</code> claim and picks the right JWKS.</p>
+
+      <h3>RP-Initiated Logout (redirect logout)</h3>
+      <p>
+        When a user clicks <em>Sign out</em> in Postal, if a Keycloak <code>id_token</code> is present in the session,
+        Postal redirects to the IdP's <code>end_session_endpoint</code> with:
+      </p>
+      <ul>
+        <li><code>id_token_hint</code> — the user's original id_token</li>
+        <li><code>post_logout_redirect_uri</code> — Postal's login page</li>
+        <li><code>state</code> — random nonce for CSRF protection</li>
+      </ul>
+      <p>The IdP then terminates the SSO session and redirects back to the Postal login page. If the provider does not expose an <code>end_session_endpoint</code> in its discovery document, Postal falls back to a local session invalidation only.</p>
+      <p><strong>Configure in Keycloak:</strong> Realm → Clients → <em>your client</em> → Advanced → <em>Valid post logout redirect URIs</em>:</p>
+      <pre>https://postal.example.com/login</pre>
     </section>
 
   </div>
