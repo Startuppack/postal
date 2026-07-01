@@ -694,6 +694,11 @@ curl -X POST https://postal.example.com/scim/v2/tenants/acme/Users \
   }'</pre>
 
       <h3>Groups (= the org)</h3>
+      <p>
+        In this model, <strong>one org = one SCIM group</strong>. The group <em>is</em> the org — there are no sub-groups or teams within an org.
+        Postal has no sub-group concept: roles (<code>admin</code>, <code>member</code>, <code>readonly</code>) are set directly on the user↔org link.
+        If you need separate access scopes, create one org per scope and provision users into each.
+      </p>
       <p>No <code>POST</code> or <code>DELETE</code> — org lifecycle is managed via API v2. <code>PATCH</code> handles org attributes <em>and</em> members in one request.</p>
       <div class="table-wrap"><table>
         <tr><th>Method</th><th>Path</th><th>Description</th></tr>
