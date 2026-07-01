@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "net/http"
+require "json"
+
 module Api
   module V2
     class BaseController < ActionController::Base
@@ -18,8 +21,19 @@ module Api
         raw = request.headers["Authorization"]&.delete_prefix("Bearer ")&.strip
         return render_unauthorized("Missing token") unless raw.present?
 
+        issuer = Postal::Config.oidc.issuer.to_s
+        if issuer.blank?
+          return render json: { error: "server_error", error_description: "OIDC issuer not configured" },
+                        status: :internal_server_error
+        end
+
         begin
-          payload, = JWT.decode(raw, Postal::Config.api.jwt_secret.to_s, true, { algorithms: ["HS256"] })
+          payload, = JWT.decode(raw, nil, true, {
+            algorithms:  ["RS256"],
+            jwks:        ->(opts) { fetch_jwks(opts) },
+            iss:         issuer,
+            verify_iss:  true
+          })
           @current_token_payload = payload
         rescue JWT::ExpiredSignature
           return render_unauthorized("Token expired")
@@ -27,19 +41,36 @@ module Api
           return render_unauthorized(e.message)
         end
 
-        render json: { error: "forbidden", error_description: "Insufficient scope" }, status: :forbidden unless admin_token?
+        required_azp = Postal::Config.api.required_azp.to_s
+        if required_azp.present? && @current_token_payload["azp"].to_s != required_azp
+          return render json: { error: "forbidden", error_description: "azp mismatch" }, status: :forbidden
+        end
       end
 
       def current_token_payload
         @current_token_payload
       end
 
-      def token_scope
-        current_token_payload&.fetch("scope", nil)
+      # Fetch JWKS from Keycloak, auto-discovered via OIDC discovery or jwks_uri config.
+      # Caches for 1 hour; busts cache on unknown kid (key rotation).
+      def fetch_jwks(opts = {})
+        Rails.cache.delete("postal_api_v2_jwks") if opts[:kid_not_found]
+        Rails.cache.fetch("postal_api_v2_jwks", expires_in: 1.hour) do
+          JSON.parse(Net::HTTP.get(URI(resolve_jwks_uri)))
+        end
       end
 
-      def admin_token?
-        token_scope == "admin"
+      def resolve_jwks_uri
+        # 1. Explicit config
+        explicit = Postal::Config.oidc.jwks_uri.to_s
+        return explicit if explicit.present?
+
+        # 2. OIDC discovery (default for Keycloak)
+        issuer = Postal::Config.oidc.issuer.to_s.chomp("/")
+        discovery = Rails.cache.fetch("postal_oidc_discovery", expires_in: 1.hour) do
+          JSON.parse(Net::HTTP.get(URI("#{issuer}/.well-known/openid-configuration")))
+        end
+        discovery["jwks_uri"]
       end
 
       def render_unauthorized(message = "Unauthorized")
