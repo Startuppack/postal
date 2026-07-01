@@ -92,7 +92,10 @@ Rails.application.routes.draw do
   match "login/reset/:token" => "sessions#finish_password_reset", :via => [:get, :post]
 
   if Postal::Config.oidc.enabled?
-    get "auth/oidc/callback", to: "sessions#create_from_oidc"
+    # Dynamic callback handles any registered provider (single or multi-provider)
+    get  "auth/:provider/callback", to: "sessions#create_from_oidc"
+    # Back-Channel Logout — KC POSTs a logout_token here to invalidate all user sessions
+    post "auth/oidc/backchannel_logout", to: "oidc_logout#backchannel"
   end
 
   if Postal::Config.scim.enabled?

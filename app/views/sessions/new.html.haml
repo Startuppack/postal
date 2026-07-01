@@ -8,8 +8,9 @@
     = hidden_field_tag 'return_to', params[:return_to]
 
     - if Postal::Config.oidc.enabled?
-      .loginForm__oidcButton
-        = link_to "Login with #{Postal::Config.oidc.name}", "/auth/oidc", method: :post, class: 'button button--full'
+      - Postal::OidcProviders.all.each do |provider|
+        .loginForm__oidcButton
+          = link_to provider[:display_name], "/auth/#{provider[:id]}", method: :post, class: 'button button--full'
 
     - if Postal::Config.oidc.enabled? && Postal::Config.oidc.local_authentication_enabled?
       .loginForm__divider

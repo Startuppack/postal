@@ -17,8 +17,30 @@ class SessionsController < ApplicationController
   end
 
   def destroy
+    id_token    = session[:oidc_id_token]
+    provider_id = session[:oidc_provider_id]
+
     auth_session.invalidate! if logged_in?
     reset_session
+
+    # RP-Initiated Logout: redirect to the IdP end_session_endpoint when possible
+    if Postal::Config.oidc.enabled? && id_token.present?
+      provider = Postal::OidcProviders.find_by_id(provider_id.to_s) ||
+                 Postal::OidcProviders.all.first
+      if provider
+        end_url = Postal::OidcProviders.end_session_endpoint_for(provider)
+        if end_url.present?
+          query = URI.encode_www_form(
+            id_token_hint:            id_token,
+            post_logout_redirect_uri: login_url,
+            state:                    SecureRandom.hex(8)
+          )
+          redirect_to "#{end_url}?#{query}", allow_other_host: true
+          return
+        end
+      end
+    end
+
     redirect_to login_path
   end
 
@@ -72,20 +94,27 @@ class SessionsController < ApplicationController
       raise Postal::Error, "OIDC cannot be used unless enabled in the configuration"
     end
 
-    auth = request.env["omniauth.auth"]
-    user = User.find_from_oidc(auth.extra.raw_info, logger: Postal.logger)
+    auth         = request.env["omniauth.auth"]
+    provider_id  = params[:provider] || auth.provider.to_s
+    provider_cfg = Postal::OidcProviders.find_by_id(provider_id) ||
+                   Postal::OidcProviders.all.first
+
+    raw_info = auth.extra.raw_info
+    user     = User.find_from_oidc(raw_info, logger: Postal.logger)
     if user.nil?
-      user = jit_provision_oidc_user(auth)
+      user = jit_provision_oidc_user(auth, provider_cfg)
       if user.nil?
         redirect_to login_path, alert: "No user was found matching your identity. Please contact your administrator."
         return
       end
-      auto_create_org_for_new_user(user, auth.extra.raw_info) if Postal::Config.oidc.auto_create_org_on_signup?
+      auto_create_org_for_new_user(user, raw_info) if Postal::Config.oidc.auto_create_org_on_signup?
     end
 
-    if Postal::Config.oidc.auto_provision_org?
-      provision_orgs_from_oidc(user, auth.extra.raw_info)
-    end
+    provision_orgs_from_oidc(user, raw_info) if Postal::Config.oidc.auto_provision_org?
+
+    # Store id_token for RP-Initiated Logout and the provider id for routing
+    session[:oidc_id_token]   = auth.credentials&.id_token
+    session[:oidc_provider_id] = provider_id
 
     login(user)
     flash[:remember_login] = true
@@ -98,27 +127,27 @@ class SessionsController < ApplicationController
 
   private
 
-  def jit_provision_oidc_user(auth)
-    raw = auth.extra.raw_info
-    config = Postal::Config.oidc
-    email = raw[config.email_address_field]
+  def jit_provision_oidc_user(auth, provider_cfg = nil)
+    raw    = auth.extra.raw_info
+    cfg    = provider_cfg || Postal::OidcProviders.all.first || {}
+    email  = raw[cfg[:email_address_field] || "email"]
     return nil if email.blank?
 
-    full_name = raw[config.name_field].to_s
+    full_name  = raw[cfg[:name_field] || "name"].to_s
     first_name = raw["given_name"].presence || full_name.split(/\s+/, 2).first.presence || email.split("@").first
     last_name  = raw["family_name"].presence || full_name.split(/\s+/, 2)[1].to_s
 
     user = User.new(
       email_address: email,
-      first_name: first_name,
-      last_name: last_name,
-      oidc_uid: raw[config.uid_field],
-      oidc_issuer: config.issuer
+      first_name:    first_name,
+      last_name:     last_name,
+      oidc_uid:      raw[cfg[:uid_field] || "sub"],
+      oidc_issuer:   cfg[:issuer] || Postal::Config.oidc.issuer
     )
     user.password = SecureRandom.hex(24)
 
     if user.save
-      Postal.logger.info("OIDC JIT provisioned user #{email}")
+      Postal.logger.info("OIDC JIT provisioned user #{email} via provider #{cfg[:id]}")
       user
     else
       Postal.logger.error("OIDC JIT provision failed for #{email}: #{user.errors.full_messages.join(', ')}")

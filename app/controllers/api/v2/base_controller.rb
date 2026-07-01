@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require "net/http"
-require "json"
-
 module Api
   module V2
     class BaseController < ActionController::Base
@@ -21,20 +18,14 @@ module Api
         raw = request.headers["Authorization"]&.delete_prefix("Bearer ")&.strip
         return render_unauthorized("Missing token") unless raw.present?
 
-        issuer = Postal::Config.oidc.issuer.to_s
-        if issuer.blank?
-          return render json: { error: "server_error", error_description: "oidc.issuer not configured" },
+        unless Postal::Config.oidc.enabled? && Postal::OidcProviders.any?
+          return render json: { error: "server_error",
+                                error_description: "oidc.issuer not configured" },
                         status: :internal_server_error
         end
 
         begin
-          payload, = JWT.decode(raw, nil, true, {
-            algorithms: ["RS256"],
-            jwks:       ->(opts) { fetch_jwks(opts) },
-            iss:        issuer,
-            verify_iss: true
-          })
-          @current_token_payload = payload
+          @current_token_payload = Postal::OidcProviders.decode_jwt(raw)
         rescue JWT::ExpiredSignature
           return render_unauthorized("Token expired")
         rescue JWT::DecodeError => e
@@ -102,25 +93,6 @@ module Api
           render json: { error: "forbidden", error_description: "Organization admin access required" },
                  status: :forbidden
         end
-      end
-
-      # Fetch JWKS from Keycloak via OIDC discovery. Caches 1 h; busts on unknown kid.
-      def fetch_jwks(opts = {})
-        Rails.cache.delete("postal_api_v2_jwks") if opts[:kid_not_found]
-        Rails.cache.fetch("postal_api_v2_jwks", expires_in: 1.hour) do
-          JSON.parse(Net::HTTP.get(URI(resolve_jwks_uri)))
-        end
-      end
-
-      def resolve_jwks_uri
-        explicit = Postal::Config.oidc.jwks_uri.to_s
-        return explicit if explicit.present?
-
-        issuer = Postal::Config.oidc.issuer.to_s.chomp("/")
-        discovery = Rails.cache.fetch("postal_oidc_discovery", expires_in: 1.hour) do
-          JSON.parse(Net::HTTP.get(URI("#{issuer}/.well-known/openid-configuration")))
-        end
-        discovery["jwks_uri"]
       end
 
       def render_unauthorized(message = "Unauthorized")
