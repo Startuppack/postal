@@ -22,10 +22,12 @@ module Api
           payload, = JWT.decode(raw, Postal::Config.api.jwt_secret.to_s, true, { algorithms: ["HS256"] })
           @current_token_payload = payload
         rescue JWT::ExpiredSignature
-          render_unauthorized("Token expired")
+          return render_unauthorized("Token expired")
         rescue JWT::DecodeError => e
-          render_unauthorized(e.message)
+          return render_unauthorized(e.message)
         end
+
+        render json: { error: "forbidden", error_description: "Insufficient scope" }, status: :forbidden unless admin_token?
       end
 
       def current_token_payload
