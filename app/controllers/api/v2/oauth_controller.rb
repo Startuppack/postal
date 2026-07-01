@@ -13,7 +13,6 @@ module Api
       def token
         case params[:grant_type]
         when "client_credentials" then handle_client_credentials
-        when "password"           then handle_password
         else
           render json: { error: "unsupported_grant_type" }, status: :bad_request
         end
@@ -35,24 +34,6 @@ module Api
         end
 
         payload = base_payload.merge("sub" => cid, "scope" => "admin")
-        render_token(payload)
-      end
-
-      def handle_password
-        email    = params[:username].to_s
-        password = params[:password].to_s
-
-        begin
-          user = User.authenticate(email, password)
-        rescue Postal::Errors::AuthenticationError
-          return render json: { error: "invalid_grant", error_description: "Invalid credentials" }, status: :unauthorized
-        end
-
-        payload = base_payload.merge(
-          "sub"     => user.email_address,
-          "user_id" => user.id,
-          "scope"   => user.admin? ? "admin" : "user"
-        )
         render_token(payload)
       end
 

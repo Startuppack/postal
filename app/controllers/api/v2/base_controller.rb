@@ -40,13 +40,6 @@ module Api
         token_scope == "admin"
       end
 
-      def token_user
-        return @token_user if defined?(@token_user)
-
-        user_id = current_token_payload&.fetch("user_id", nil)
-        @token_user = user_id ? User.find_by(id: user_id) : nil
-      end
-
       def render_unauthorized(message = "Unauthorized")
         render json: { error: "unauthorized", error_description: message }, status: :unauthorized
       end
