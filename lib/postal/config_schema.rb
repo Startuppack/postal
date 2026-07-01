@@ -613,6 +613,17 @@ module Postal
         description "Bearer token required to authenticate SCIM requests"
       end
     end
+
+    group :api do
+      boolean :enabled do
+        description "Enable the admin REST API v2 (organizations, servers, domains, credentials, users)"
+        default false
+      end
+
+      string :bearer_token do
+        description "Bearer token required to authenticate API v2 requests (Authorization: Bearer <token>)"
+      end
+    end
   end
 
   class << self

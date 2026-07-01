@@ -104,6 +104,39 @@ Rails.application.routes.draw do
     end
   end
 
+  if Postal::Config.api.enabled?
+    namespace :api do
+      namespace :v2 do
+        resources :organizations, only: [:index, :show, :create, :update, :destroy] do
+          member do
+            post :suspend
+            post :unsuspend
+          end
+          resources :servers, only: [:index, :show, :create, :update, :destroy] do
+            member do
+              post :suspend
+              post :unsuspend
+            end
+            resources :domains, only: [:index, :show, :create, :destroy] do
+              member do
+                post :verify
+                post :dns_check
+              end
+            end
+            resources :credentials, only: [:index, :show, :create, :destroy]
+          end
+          resources :domains, only: [:index, :show, :create, :destroy] do
+            member do
+              post :verify
+              post :dns_check
+            end
+          end
+        end
+        resources :users, only: [:index, :show, :create, :update, :destroy]
+      end
+    end
+  end
+
   get ".well-known/jwks.json" => "well_known#jwks"
 
   get "ip" => "sessions#ip"
