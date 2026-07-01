@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Postal — Startup Pack fork</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --accent: #2ea043; --accent2: #388bfd; --text: #e6edf3;
+      --muted: #8b949e; --code-bg: #1e2633; --radius: 8px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header { border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header .logo { font-size: 1.4rem; font-weight: 700; }
+    header .badge { font-size: .75rem; background: #1f3a20; color: var(--accent); border: 1px solid var(--accent); border-radius: 20px; padding: .2rem .6rem; }
+    header nav { margin-left: auto; display: flex; gap: 1.5rem; font-size: .9rem; }
+    header nav a { color: var(--muted); }
+
+    .hero { max-width: 800px; margin: 5rem auto 3rem; padding: 0 2rem; text-align: center; }
+    .hero h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 1.15rem; max-width: 600px; margin: 0 auto 2rem; }
+    .hero .actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: .6rem 1.4rem; border-radius: var(--radius); font-size: .95rem; font-weight: 600; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #3fb950; text-decoration: none; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #21262d; text-decoration: none; }
+
+    .fork-notice { max-width: 860px; margin: 0 auto 3rem; padding: 0 2rem; }
+    .fork-notice .inner { background: #1a1207; border: 1px solid #6e4c00; border-radius: var(--radius); padding: 1rem 1.2rem; color: #d29922; font-size: .9rem; }
+    .fork-notice .inner strong { color: #e3b341; }
+
+    .content { max-width: 860px; margin: 0 auto; padding: 0 2rem 6rem; }
+    section { margin-bottom: 4rem; }
+    section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+    section h3 { font-size: 1.05rem; font-weight: 700; margin: 1.5rem 0 .6rem; color: var(--text); }
+    section p, section li { color: var(--muted); margin-bottom: .5rem; }
+    section li { margin-left: 1.2rem; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; }
+    .card .icon { font-size: 1.6rem; margin-bottom: .6rem; }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; color: var(--text); margin-top: 0; }
+    .card p { font-size: .9rem; color: var(--muted); margin: 0; }
+
+    pre, code { font-family: "SF Mono", "Fira Code", monospace; font-size: .875rem; }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; overflow-x: auto; margin: 1rem 0; }
+    code { background: var(--code-bg); padding: .15em .35em; border-radius: 4px; font-size: .85em; }
+
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th { text-align: left; padding: .6rem .8rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-weight: 600; }
+    td { padding: .55rem .8rem; border: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+    tr:nth-child(even) td { background: #0f141a; }
+    .yes { color: var(--accent); font-weight: 700; text-align: center; }
+    .no  { color: #6e7681; text-align: center; }
+
+    footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: .85rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">✉ Postal</span>
+  <span class="badge">Startup Pack fork</span>
+  <nav>
+    <a href="#api">API v2</a>
+    <a href="#roles">Roles</a>
+    <a href="#config">Config</a>
+    <a href="https://github.com/Startuppack/postal">GitHub</a>
+    <a href="https://docs.postalserver.io">Official docs</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Postal with a<br><span>provisioning API</span></h1>
+    <p>Open-source mail server — extended by Startup Pack with a full admin REST API, member roles, and auto-provisioned SMTP servers.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#api">API reference</a>
+      <a class="btn btn-secondary" href="https://github.com/Startuppack/postal">View on GitHub</a>
+    </div>
+  </div>
+
+  <div class="fork-notice">
+    <div class="inner">
+      <strong>This is an unofficial fork.</strong>
+      Maintained by <a href="https://startuppack.xyz" style="color:#e3b341">Startup Pack</a>,
+      not affiliated with the <a href="https://github.com/postalserver/postal" style="color:#e3b341">official Postal project</a> (Krystal Hosting Ltd).
+      The API v2 and role system were created by Startup Pack.
+    </div>
+  </div>
+
+  <div class="content">
+
+    <section>
+      <h2>What this fork adds</h2>
+      <div class="cards">
+        <div class="card"><div class="icon">🔌</div><h3>Admin REST API v2</h3><p>Full provisioning API for orgs, servers, domains, credentials and users — no Rails console needed.</p></div>
+        <div class="card"><div class="icon">👥</div><h3>Multi-user orgs</h3><p>Add multiple users to an organization with granular roles via API or SCIM.</p></div>
+        <div class="card"><div class="icon">🔒</div><h3>Role-based access</h3><p><code>admin</code>, <code>member</code>, <code>readonly</code> — enforced across all web UI controllers.</p></div>
+        <div class="card"><div class="icon">⚡</div><h3>Auto SMTP server</h3><p>Creating an org via API or SCIM automatically provisions a Live SMTP server and default credential.</p></div>
+        <div class="card"><div class="icon">🔐</div><h3>SCIM v2 + OIDC</h3><p>SCIM user/group sync and JIT OIDC user provisioning on first SSO login.</p></div>
+        <div class="card"><div class="icon">🛠</div><h3>Upstream fixes</h3><p>UTF-8 subject encoding, SMTP timeouts, stale webhook locks, X-Envelope-From, Message-ID idempotency.</p></div>
+      </div>
+    </section>
+
+    <section id="config">
+      <h2>Configuration</h2>
+      <p>Add to your <code>postal.yml</code>:</p>
+      <pre>api:
+  enabled: true
+  bearer_token: &lt;your-secret-token&gt;
+
+scim:
+  enabled: true
+  bearer_token: &lt;scim-token&gt;</pre>
+    </section>
+
+    <section id="api">
+      <h2>API v2 reference</h2>
+      <p>All requests require <code>Authorization: Bearer &lt;token&gt;</code>. Standard HTTP status codes: <code>200 201 204 401 404 422</code>.</p>
+
+      <h3>Organizations</h3>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v2/organizations</code></td><td>List all</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v2/organizations</code></td><td>Create (auto-provisions SMTP server)</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v2/organizations/:permalink</code></td><td>Get</td></tr>
+        <tr><td><code>PATCH</code></td><td><code>/api/v2/organizations/:permalink</code></td><td>Update</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/api/v2/organizations/:permalink</code></td><td>Delete</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v2/organizations/:permalink/suspend</code></td><td>Suspend / unsuspend</td></tr>
+      </table></div>
+      <pre>{ "name": "Acme", "permalink": "acme", "time_zone": "UTC", "owner_email": "admin@acme.com" }</pre>
+
+      <h3>Members</h3>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v2/organizations/:org/members</code></td><td>List members</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v2/organizations/:org/members</code></td><td>Add user to org</td></tr>
+        <tr><td><code>PATCH</code></td><td><code>/api/v2/organizations/:org/members/:user</code></td><td>Change role</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/api/v2/organizations/:org/members/:user</code></td><td>Remove member</td></tr>
+      </table></div>
+      <pre>{ "user_id": "user@example.com", "role": "member" }</pre>
+
+      <h3>Servers</h3>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET / POST</code></td><td><code>/api/v2/organizations/:org/servers</code></td><td>List / create</td></tr>
+        <tr><td><code>GET / PATCH / DELETE</code></td><td><code>/api/v2/organizations/:org/servers/:server</code></td><td>Get / update / delete</td></tr>
+        <tr><td><code>POST</code></td><td><code>…/:server/suspend</code></td><td>Suspend / unsuspend</td></tr>
+      </table></div>
+
+      <h3>Domains</h3>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET / POST</code></td><td><code>…/:server/domains</code></td><td>List / add (returns DKIM record)</td></tr>
+        <tr><td><code>GET / DELETE</code></td><td><code>…/:server/domains/:uuid</code></td><td>Get (DKIM + DNS status) / delete</td></tr>
+        <tr><td><code>POST</code></td><td><code>…/domains/:uuid/verify</code></td><td>Force-mark verified</td></tr>
+        <tr><td><code>POST</code></td><td><code>…/domains/:uuid/dns_check</code></td><td>Re-check DNS records</td></tr>
+      </table></div>
+
+      <h3>Credentials</h3>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET / POST</code></td><td><code>…/:server/credentials</code></td><td>List / create (returns generated key)</td></tr>
+        <tr><td><code>GET / DELETE</code></td><td><code>…/:server/credentials/:uuid</code></td><td>Get / delete</td></tr>
+      </table></div>
+
+      <h3>Users</h3>
+      <div class="table-wrap"><table>
+        <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        <tr><td><code>GET / POST</code></td><td><code>/api/v2/users</code></td><td>List / create</td></tr>
+        <tr><td><code>GET / PATCH / DELETE</code></td><td><code>/api/v2/users/:id</code></td><td>Get / update / delete (by UUID or email)</td></tr>
+      </table></div>
+
+      <p style="margin-top:1rem">All list endpoints accept <code>?page=1&amp;per_page=50</code> (max 200). Errors: <code>{"errors": ["Name can't be blank"]}</code>.</p>
+    </section>
+
+    <section id="roles">
+      <h2>Member roles</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Permission</th><th style="text-align:center">admin</th><th style="text-align:center">member</th><th style="text-align:center">readonly</th></tr>
+        <tr><td>Edit org settings</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>Create / delete servers</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>Create / delete domains &amp; credentials</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>Manage routes, webhooks, endpoints</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>View messages, logs, stats</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      </table></div>
+      <pre style="margin-top:1rem">curl -X POST https://postal.example.com/api/v2/organizations/acme/members \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "auditor@example.com", "role": "readonly"}'</pre>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <p>Postal fork maintained by <a href="https://startuppack.xyz">Startup Pack</a> — not affiliated with <a href="https://github.com/postalserver/postal">postalserver/postal</a> (Krystal Hosting Ltd). Licensed MIT.</p>
+</footer>
+</body>
+</html>
