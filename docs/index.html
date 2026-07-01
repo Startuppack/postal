@@ -722,6 +722,19 @@ curl -X PATCH https://postal.example.com/scim/v2/tenants/acme/Groups/42 \
     <section id="oidc">
       <h2>SSO / OIDC provisioning</h2>
 
+      <h3>Disable local (password) login</h3>
+      <p>Set <code>oidc.local_authentication_enabled: false</code> to force SSO-only access. When disabled:</p>
+      <ul>
+        <li>The email/password form is hidden from the login page</li>
+        <li><code>POST /login</code>, password reset requests and password reset flows are all blocked server-side (403)</li>
+        <li>Only the <em>Login with {provider}</em> button remains</li>
+        <li>Users with no SSO identity can no longer log in — ensure all users are in your IdP before enabling this</li>
+      </ul>
+      <pre>oidc:
+  enabled: true
+  issuer: https://login.example.com/realms/myrealm
+  local_authentication_enabled: false   # SSO only, no password login</pre>
+
       <h3>JIT user provisioning</h3>
       <p>When a user logs in via SSO and does not exist in Postal, they are automatically created (<em>JIT provisioning</em>). Name and email are read from the JWT claims (<code>given_name</code>, <code>family_name</code>, <code>email</code>).</p>
 
