@@ -3,6 +3,7 @@
 class OrganizationsController < ApplicationController
 
   before_action :admin_required, only: [:new, :create, :delete, :destroy]
+  before_action :require_org_write_access!, only: [:edit, :update, :delete, :destroy]
 
   def index
     if current_user.admin?
@@ -64,5 +65,15 @@ class OrganizationsController < ApplicationController
     @organization ||= params[:org_permalink] ? current_user.organizations_scope.find_by_permalink!(params[:org_permalink]) : nil
   end
   helper_method :organization
+
+  def require_org_write_access!
+    return unless organization
+    return if current_user.admin?
+
+    ou = organization.organization_users.find_by(user: current_user, user_type: "User")
+    return if ou&.admin?
+
+    redirect_to root_path, alert: "Administrator access required to edit organization settings."
+  end
 
 end

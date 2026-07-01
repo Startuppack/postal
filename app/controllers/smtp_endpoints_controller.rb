@@ -3,6 +3,7 @@
 class SMTPEndpointsController < ApplicationController
 
   include WithinOrganization
+  before_action :require_write_access!, only: [:new, :create, :update, :destroy]
   before_action { @server = organization.servers.present.find_by_permalink!(params[:server_id]) }
   before_action { params[:id] && @smtp_endpoint = @server.smtp_endpoints.find_by_uuid!(params[:id]) }
 
