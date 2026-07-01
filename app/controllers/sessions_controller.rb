@@ -80,6 +80,7 @@ class SessionsController < ApplicationController
         redirect_to login_path, alert: "No user was found matching your identity. Please contact your administrator."
         return
       end
+      auto_create_org_for_new_user(user, auth.extra.raw_info) if Postal::Config.oidc.auto_create_org_on_signup?
     end
 
     if Postal::Config.oidc.auto_provision_org?
@@ -156,6 +157,33 @@ class SessionsController < ApplicationController
     end
   rescue => e
     Postal.logger.error("OIDC org provisioning failed: #{e.message}")
+  end
+
+  def auto_create_org_for_new_user(user, raw_info)
+    # Derive slug from preferred_username, fallback to email prefix
+    base = (raw_info["preferred_username"].presence || user.email_address.split("@").first.to_s)
+             .downcase
+             .gsub(/[^a-z0-9]+/, "-")
+             .gsub(/^-+|-+$/, "")
+             .presence || "org"
+
+    # Ensure uniqueness — append counter if slug taken
+    slug = base
+    counter = 2
+    slug = "#{base}-#{counter += 1}" while Organization.exists?(permalink: slug)
+
+    org = Organization.new(name: slug, permalink: slug, owner: user)
+    org.save!
+    org.organization_users.create!(user: user, user_type: "User",
+                                   role: "admin", admin: true, all_servers: true)
+
+    server = org.servers.new(name: org.name, mode: "Live")
+    server.save!
+    server.credentials.create!(name: "Default SMTP", type: "SMTP")
+
+    Postal.logger.info("Auto-created org '#{slug}' for new SSO user #{user.email_address}")
+  rescue => e
+    Postal.logger.error("auto_create_org_for_new_user failed for #{user.email_address}: #{e.message}")
   end
 
   def require_local_authentication

@@ -626,6 +626,11 @@ module Postal
         description "Automatically create/join a Postal organization from the 'organization' OIDC claim on login"
         default false
       end
+
+      boolean :auto_create_org_on_signup do
+        description "When a new user is JIT-provisioned via SSO, automatically create a default organization named after their username"
+        default false
+      end
     end
 
     group :scim do
