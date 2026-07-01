@@ -54,7 +54,7 @@ jobs:
       - run: docker compose pull
         env:
           POSTAL_IMAGE: ${{ env.IMAGE }}:ci-${{ github.sha }}
-      - run: docker compose run postal sh -c 'bundle exec rails db:migrate && bundle exec rspec'
+      - run: docker compose run postal sh -c 'bundle exec rails db:schema:load && bundle exec rspec'
         env:
           POSTAL_IMAGE: ${{ env.IMAGE }}:ci-${{ github.sha }}
 

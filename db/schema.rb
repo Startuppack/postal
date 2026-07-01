@@ -164,6 +164,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_11_205229) do
     t.boolean "admin", default: false
     t.boolean "all_servers", default: true
     t.string "user_type"
+    t.string "role"
   end
 
   create_table "organizations", id: :integer, charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
