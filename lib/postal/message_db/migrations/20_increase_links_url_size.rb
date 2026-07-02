@@ -6,7 +6,7 @@ module Postal
       class IncreaseLinksUrlSize < Postal::MessageDB::Migration
 
         def up
-          @database.query("ALTER TABLE `#{@database.database_name}`.`links` MODIFY `url` TEXT")
+          @database.provisioner.modify_column(:links, :url, "TEXT")
         end
 
       end

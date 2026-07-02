@@ -6,7 +6,7 @@ module Postal
       class AddHoldExpiry < Postal::MessageDB::Migration
 
         def up
-          @database.query("ALTER TABLE `#{@database.database_name}`.`messages` ADD COLUMN `hold_expiry` decimal(18,6)")
+          @database.provisioner.add_column(:messages, :hold_expiry, "decimal(18,6)")
         end
 
       end

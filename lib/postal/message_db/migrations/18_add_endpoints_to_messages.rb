@@ -6,7 +6,8 @@ module Postal
       class AddEndpointsToMessages < Postal::MessageDB::Migration
 
         def up
-          @database.query("ALTER TABLE `#{@database.database_name}`.`messages` ADD COLUMN `endpoint_id` int(11), ADD COLUMN `endpoint_type` varchar(255)")
+          @database.provisioner.add_column(:messages, :endpoint_id, "int(11)")
+          @database.provisioner.add_column(:messages, :endpoint_type, "varchar(255)")
         end
 
       end

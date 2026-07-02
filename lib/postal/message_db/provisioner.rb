@@ -84,6 +84,45 @@ module Postal
         end
       end
 
+      def add_column(table_name, col_name, mysql_type)
+        if postgresql?
+          @database.query(
+            "ALTER TABLE #{qt(table_name)} ADD COLUMN #{qi(col_name)} #{pg_type(mysql_type)}"
+          )
+        else
+          @database.query(
+            "ALTER TABLE #{qt(table_name)} ADD COLUMN `#{col_name}` #{mysql_type}"
+          )
+        end
+      end
+
+      def add_index(table_name, index_name, mysql_cols, unique: false)
+        if postgresql?
+          clean_cols = mysql_cols.gsub(/\(\d+\)/, "").gsub("`", "").split(",").map(&:strip)
+          quoted     = clean_cols.map { |c| qi(c) }.join(", ")
+          pg_idx_name = "#{table_name}_#{index_name}"
+          kind = unique ? "UNIQUE INDEX" : "INDEX"
+          @database.query("CREATE #{kind} #{qi_plain(pg_idx_name)} ON #{qt(table_name)} (#{quoted})")
+        else
+          kind = unique ? "UNIQUE KEY" : "KEY"
+          @database.query(
+            "ALTER TABLE #{qt(table_name)} ADD #{kind} `#{index_name}` (#{mysql_cols}) USING BTREE"
+          )
+        end
+      end
+
+      def modify_column(table_name, col_name, mysql_type)
+        if postgresql?
+          @database.query(
+            "ALTER TABLE #{qt(table_name)} ALTER COLUMN #{qi(col_name)} TYPE #{pg_type(mysql_type)}"
+          )
+        else
+          @database.query(
+            "ALTER TABLE #{qt(table_name)} MODIFY `#{col_name}` #{mysql_type}"
+          )
+        end
+      end
+
       def drop_table(table_name)
         @database.query("DROP TABLE #{qt(table_name)}")
       end
