@@ -219,11 +219,15 @@ module Postal
 
       # Build CREATE TABLE (+ CREATE INDEX) SQL for PostgreSQL.
       def create_table_query_pg(table_name, options)
-        pk = (options[:primary_key].to_s.gsub('`', '') if options[:primary_key]) || "id"
+        # primary_key may be pre-backtick-quoted MySQL syntax (single or composite).
+        # Convert each backtick-quoted identifier to PG double-quote, drop prefix lengths.
+        pk_raw = options[:primary_key] ? options[:primary_key].to_s : "`id`"
+        pk = pk_raw.gsub(/`([^`]*)`(?:\(\d+\))?/) { qi($1) }
+        pk = qi(pk_raw) unless pk.include?('"')
         cols = options[:columns].map do |col_name, col_type|
           "#{qi(col_name)} #{pg_type(col_type)}"
         end
-        cols << "PRIMARY KEY (#{qi(pk)})"
+        cols << "PRIMARY KEY (#{pk})"
 
         stmts = ["CREATE TABLE #{qt(table_name)} (#{cols.join(', ')})"]
 
@@ -262,8 +266,9 @@ module Postal
               "UNIQUE KEY `#{idx_name}` (#{idx_opts})"
             end.join(", ")
           end
-          pk = (options[:primary_key].to_s.gsub('`', '') if options[:primary_key]) || "id"
-          s << ", PRIMARY KEY (`#{pk}`)"
+          # primary_key is already backtick-quoted MySQL syntax (single or composite).
+          pk = options[:primary_key] ? options[:primary_key].to_s : "`id`"
+          s << ", PRIMARY KEY (#{pk})"
           s << ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;"
         end
       end
