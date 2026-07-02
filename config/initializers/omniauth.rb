@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "postal/oidc_providers"
+
 if Postal::Config.oidc.enabled?
   Postal::OidcProviders.reset!
   providers = Postal::OidcProviders.all
