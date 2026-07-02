@@ -9,7 +9,7 @@ describe Postal::MessageDB::ConnectionPool do
     it "yields a connection" do
       counter = 0
       pool.use do |connection|
-        expect(connection).to be_a Mysql2::Client
+        expect(connection).to be_a Postal::MessageDB::Connection
         counter += 1
       end
       expect(counter).to eq 1
@@ -30,7 +30,7 @@ describe Postal::MessageDB::ConnectionPool do
           raise StandardError
         end
       end.to raise_error StandardError
-      expect(pool.connections).to match [kind_of(Mysql2::Client)]
+      expect(pool.connections).to match [kind_of(Postal::MessageDB::Connection)]
     end
 
     it "does not check in connections when there is a connection error" do
