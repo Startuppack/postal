@@ -101,6 +101,7 @@
     <a href="#scim">SCIM</a>
     <a href="#roles">Roles</a>
     <a href="#oidc">SSO/OIDC</a>
+    <a href="#deployment">Deploy</a>
     <a href="https://github.com/Startuppack/postal">GitHub</a>
     <a href="https://docs.postalserver.io">Official docs</a>
   </nav>
@@ -119,7 +120,7 @@
   <div class="fork-notice">
     <div class="inner">
       <strong>This is an unofficial fork.</strong>
-      Maintained by <a href="https://startuppack.xyz" style="color:#e3b341">Startup Pack</a>,
+      Maintained by <a href="https://startuppack.eu" style="color:#e3b341">Startup Pack</a>,
       not affiliated with the <a href="https://github.com/postalserver/postal" style="color:#e3b341">official Postal project</a> (Krystal Hosting Ltd).
     </div>
   </div>
@@ -824,8 +825,93 @@ curl -X PATCH https://postal.example.com/scim/v2/tenants/acme/Groups/42 \
   </div>
 </main>
 
+    <!-- ═══════════════ DEPLOYMENT ═══════════════ -->
+    <section id="deployment">
+      <h2>Deployment</h2>
+
+      <h3>Docker images</h3>
+      <p>CI publishes on every green push to <code>main</code>:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Registry</th><th>Image</th><th>Notes</th></tr>
+        <tr><td>GitHub Container Registry</td><td><code>ghcr.io/startuppack/postal:latest</code></td><td>Private org package — requires <code>read:packages</code> token</td></tr>
+        <tr><td>Internal Harbor</td><td><code>public-harbor.gottaphish.com/startuppack/postal:latest</code></td><td>Used by the k3s cluster; pull secret <code>harbor-startuppack-pull</code></td></tr>
+      </table></div>
+      <p>Both are multi-arch (<code>linux/amd64</code> + <code>linux/arm64</code>).</p>
+
+      <h3>k3s manifests</h3>
+      <p>Kubernetes manifests live in <code>infra/k3s/postal/</code> of the infra repo:</p>
+      <div class="table-wrap"><table>
+        <tr><th>File</th><th>Purpose</th></tr>
+        <tr><td><code>00-deps.yaml</code></td><td>RabbitMQ (required for worker queues)</td></tr>
+        <tr><td><code>10-init-job.yaml</code></td><td>One-shot <code>postal initialize</code> — creates DB schema on first deploy</td></tr>
+        <tr><td><code>20-workloads.yaml</code></td><td>Deployments: <code>postal-web</code>, <code>postal-smtp</code>, <code>postal-worker</code> + Services + IngressRoute</td></tr>
+      </table></div>
+      <p>Configuration is injected via a single k8s Secret <code>postal-config</code> mounted at <code>/opt/postal/config/postal.yml</code>.</p>
+
+      <h3>PostgreSQL (postgres-global)</h3>
+      <p>This fork runs on a <a href="https://cloudnative-pg.io/">CloudNativePG</a> cluster instead of the default MariaDB. Two databases are required:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Database</th><th>Purpose</th></tr>
+        <tr><td><code>postal</code></td><td>Main Rails app DB (<code>main_db</code>)</td></tr>
+        <tr><td><code>postal_messages</code></td><td>Message storage — per-server schemas created automatically (<code>message_db</code>)</td></tr>
+      </table></div>
+      <pre>main_db:
+  adapter: postgresql
+  host: postgres-global-rw.postgres-global.svc.cluster.local
+  port: 5432
+  database: postal
+  username: postal
+  password: "&lt;from-secret&gt;"
+
+message_db:
+  adapter: postgresql
+  host: postgres-global-rw.postgres-global.svc.cluster.local
+  port: 5432
+  database: postal_messages
+  username: postal
+  password: "&lt;from-secret&gt;"</pre>
+      <p>Run <code>postal initialize</code> (via the init job) once after creating the databases to load the schema.</p>
+
+      <h3>Initial bootstrap (Rails runner)</h3>
+      <p>After the init job completes, create the admin user, org, server, and SMTP credential:</p>
+      <pre>kubectl exec -n postal deploy/postal-worker -- postal runner "
+u = User.where(email_address: 'admin@example.com').first_or_initialize
+u.first_name = 'Admin'; u.last_name = 'SP'; u.admin = true
+u.password = 'changeme'; u.password_confirmation = 'changeme'; u.save!
+org = Organization.where(permalink: 'startuppack').first ||
+      Organization.create!(name: 'Startuppack', permalink: 'startuppack', owner: u)
+srv = org.servers.where(permalink: 'tenants').first ||
+      org.servers.create!(name: 'tenants', permalink: 'tenants', mode: 'Live')
+c = srv.credentials.where(name: 'shared-smtp').first ||
+    srv.credentials.create!(type: 'SMTP', name: 'shared-smtp')
+puts c.key"</pre>
+
+      <h3>Keycloak service account</h3>
+      <p>Create a service account client in the Keycloak <code>global</code> realm for API v2 super-admin access:</p>
+      <pre># Client ID: postal-api
+# Service accounts enabled: true
+# Authentication flow: client_credentials
+
+# Test token acquisition:
+curl -s https://login.example.com/realms/global/protocol/openid-connect/token \
+  -d "grant_type=client_credentials&amp;client_id=postal-api&amp;client_secret=&lt;secret&gt;" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
+
+# Test API access:
+curl https://postal.example.com/api/v2/organizations \
+  -H "Authorization: Bearer $TOKEN"</pre>
+      <p>Wire the client ID and secret to the onboarding platform via k8s Secret <code>selfhosted-postal-env</code>:</p>
+      <pre>SELFHOSTED_POSTAL_API_CLIENT_ID=postal-api
+SELFHOSTED_POSTAL_API_CLIENT_SECRET=&lt;client-secret&gt;
+SELFHOSTED_POSTAL_KC_TOKEN_URL=https://login.example.com/realms/global/protocol/openid-connect/token
+SELFHOSTED_POSTAL_SMTP_PASS=&lt;smtp-bootstrap-credential-key&gt;</pre>
+    </section>
+
+  </div>
+</main>
+
 <footer>
-  <p>Postal fork maintained by <a href="https://startuppack.xyz">Startup Pack</a> — not affiliated with <a href="https://github.com/postalserver/postal">postalserver/postal</a> (Krystal Hosting Ltd). Licensed MIT.</p>
+  <p>Postal fork maintained by <a href="https://startuppack.eu">Startup Pack</a> — not affiliated with <a href="https://github.com/postalserver/postal">postalserver/postal</a> (Krystal Hosting Ltd). Licensed MIT.</p>
 </footer>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 **Postal** is a complete, self-hosted mail server — the open-source alternative to Sendgrid, Mailgun or Postmark, ready to run on your own infrastructure.
 
-This is a fork maintained by [Startup Pack](https://startuppack.xyz) that extends Postal with a full **provisioning API**, multi-tenant SCIM, and enterprise SSO features not available in the upstream project.
+This is a fork maintained by [Startup Pack](https://startuppack.eu) that extends Postal with a full **provisioning API**, multi-tenant SCIM, and enterprise SSO features not available in the upstream project.
 
 * [Documentation](https://startuppack.github.io/postal/)
 * [What this fork adds](#what-this-fork-adds)
