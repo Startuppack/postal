@@ -2,23 +2,20 @@
   db    = Postal::Config.main_db
   adp   = db.adapter.to_s
   mysql = adp == "mysql2"
-
+  pool  = db.pool_size.to_i
   rw_host = db.host.to_s
   rw_port = db.port.to_i
   rw_user = db.username.to_s
   rw_pass = db.password.to_s
   rw_db   = db.database.to_s
-  pool    = db.pool_size.to_i
   enc     = mysql ? db.encoding.to_s : nil
-
   ro_host = db.respond_to?(:ro_host) ? db.ro_host.to_s.presence : nil
   ro_h  = ro_host || rw_host
   ro_p  = (ro_host && db.respond_to?(:ro_port)     ? db.ro_port.to_i     : nil) || rw_port
   ro_u  = (ro_host && db.respond_to?(:ro_username) ? db.ro_username.to_s : nil) || rw_user
   ro_pw = (ro_host && db.respond_to?(:ro_password) ? db.ro_password.to_s : nil) || rw_pass
 %>
-<% %w[development test production].each do |env| -%>
-<%= env %>:
+development:
   primary:
     adapter: "<%= adp %>"
     host: "<%= rw_host %>"
@@ -27,10 +24,10 @@
     password: "<%= rw_pass %>"
     database: "<%= rw_db %>"
     pool: <%= pool %>
-<% if mysql -%>
+<% if mysql %>
     encoding: "<%= enc %>"
     reconnect: true
-<% end -%>
+<% end %>
   primary_replica:
     adapter: "<%= adp %>"
     host: "<%= ro_h %>"
@@ -40,8 +37,59 @@
     database: "<%= rw_db %>"
     pool: <%= pool %>
     replica: true
-<% if mysql -%>
+<% if mysql %>
     encoding: "<%= enc %>"
     reconnect: true
-<% end -%>
-<% end -%>
+<% end %>
+test:
+  primary:
+    adapter: "<%= adp %>"
+    host: "<%= rw_host %>"
+    port: <%= rw_port %>
+    username: "<%= rw_user %>"
+    password: "<%= rw_pass %>"
+    database: "<%= rw_db %>"
+    pool: <%= pool %>
+<% if mysql %>
+    encoding: "<%= enc %>"
+    reconnect: true
+<% end %>
+  primary_replica:
+    adapter: "<%= adp %>"
+    host: "<%= ro_h %>"
+    port: <%= ro_p %>
+    username: "<%= ro_u %>"
+    password: "<%= ro_pw %>"
+    database: "<%= rw_db %>"
+    pool: <%= pool %>
+    replica: true
+<% if mysql %>
+    encoding: "<%= enc %>"
+    reconnect: true
+<% end %>
+production:
+  primary:
+    adapter: "<%= adp %>"
+    host: "<%= rw_host %>"
+    port: <%= rw_port %>
+    username: "<%= rw_user %>"
+    password: "<%= rw_pass %>"
+    database: "<%= rw_db %>"
+    pool: <%= pool %>
+<% if mysql %>
+    encoding: "<%= enc %>"
+    reconnect: true
+<% end %>
+  primary_replica:
+    adapter: "<%= adp %>"
+    host: "<%= ro_h %>"
+    port: <%= ro_p %>
+    username: "<%= ro_u %>"
+    password: "<%= ro_pw %>"
+    database: "<%= rw_db %>"
+    pool: <%= pool %>
+    replica: true
+<% if mysql %>
+    encoding: "<%= enc %>"
+    reconnect: true
+<% end %>
