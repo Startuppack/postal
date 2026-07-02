@@ -112,8 +112,10 @@ class SessionsController < ApplicationController
 
     provision_orgs_from_oidc(user, raw_info) if Postal::Config.oidc.auto_provision_org?
 
-    # Store id_token for RP-Initiated Logout and the provider id for routing
-    session[:oidc_id_token]   = auth.credentials&.id_token
+    # Store id_token for RP-Initiated Logout and the provider id for routing.
+    # omniauth_openid_connect 0.7.x exposes the raw JWT in auth.extra[:id_token];
+    # auth.credentials.id_token is a fallback (sometimes nil with certain strategies).
+    session[:oidc_id_token]   = auth.extra[:id_token].presence || auth.credentials&.id_token
     session[:oidc_provider_id] = provider_id
 
     login(user)
