@@ -79,6 +79,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
       - id: meta
         run: |
           VER="$(git describe --tags 2>/dev/null || echo 'dev')"
@@ -89,6 +94,8 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
+            ${{ secrets.HARBOR_REGISTRY }}/startuppack/postal:latest
+            ${{ secrets.HARBOR_REGISTRY }}/startuppack/postal:${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: full
@@ -96,12 +103,6 @@ jobs:
           build-args: |
             VERSION=${{ steps.meta.outputs.version }}
             BRANCH=main
-      - name: Make package public
-        run: |
-          gh api -X PATCH /orgs/Startuppack/packages/container/postal \
-            -f visibility=public || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   pages:
     name: Deploy GitHub Pages
