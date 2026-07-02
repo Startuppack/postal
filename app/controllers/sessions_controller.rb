@@ -25,10 +25,10 @@ class SessionsController < ApplicationController
 
     # RP-Initiated Logout: redirect to the IdP end_session_endpoint when possible
     if Postal::Config.oidc.enabled? && id_token.present?
-      provider = Postal::OidcProviders.find_by_id(provider_id.to_s) ||
-                 Postal::OidcProviders.all.first
+      provider = Postal::OIDCProviders.find_by_id(provider_id.to_s) ||
+                 Postal::OIDCProviders.all.first
       if provider
-        end_url = Postal::OidcProviders.end_session_endpoint_for(provider)
+        end_url = Postal::OIDCProviders.end_session_endpoint_for(provider)
         if end_url.present?
           query = URI.encode_www_form(
             id_token_hint:            id_token,
@@ -96,8 +96,8 @@ class SessionsController < ApplicationController
 
     auth         = request.env["omniauth.auth"]
     provider_id  = params[:provider] || auth.provider.to_s
-    provider_cfg = Postal::OidcProviders.find_by_id(provider_id) ||
-                   Postal::OidcProviders.all.first
+    provider_cfg = Postal::OIDCProviders.find_by_id(provider_id) ||
+                   Postal::OIDCProviders.all.first
 
     raw_info = auth.extra.raw_info
     user     = User.find_from_oidc(raw_info, logger: Postal.logger)
@@ -129,7 +129,7 @@ class SessionsController < ApplicationController
 
   def jit_provision_oidc_user(auth, provider_cfg = nil)
     raw    = auth.extra.raw_info
-    cfg    = provider_cfg || Postal::OidcProviders.all.first || {}
+    cfg    = provider_cfg || Postal::OIDCProviders.all.first || {}
     email  = raw[cfg[:email_address_field] || "email"]
     return nil if email.blank?
 

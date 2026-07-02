@@ -3,8 +3,8 @@
 require "postal/oidc_providers"
 
 if Postal::Config.oidc.enabled?
-  Postal::OidcProviders.reset!
-  providers = Postal::OidcProviders.all
+  Postal::OIDCProviders.reset!
+  providers = Postal::OIDCProviders.all
   base_url  = "#{Postal::Config.postal.web_protocol}://#{Postal::Config.postal.web_hostname}"
 
   if providers.any?

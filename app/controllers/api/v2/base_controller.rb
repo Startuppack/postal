@@ -18,14 +18,14 @@ module Api
         raw = request.headers["Authorization"]&.delete_prefix("Bearer ")&.strip
         return render_unauthorized("Missing token") unless raw.present?
 
-        unless Postal::Config.oidc.enabled? && Postal::OidcProviders.any?
+        unless Postal::Config.oidc.enabled? && Postal::OIDCProviders.any?
           return render json: { error: "server_error",
                                 error_description: "oidc.issuer not configured" },
                         status: :internal_server_error
         end
 
         begin
-          @current_token_payload = Postal::OidcProviders.decode_jwt(raw)
+          @current_token_payload = Postal::OIDCProviders.decode_jwt(raw)
         rescue JWT::ExpiredSignature
           return render_unauthorized("Token expired")
         rescue JWT::DecodeError => e

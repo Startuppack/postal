@@ -18,7 +18,7 @@ class OidcLogoutController < ApplicationController
     return render plain: "Missing logout_token", status: :bad_request unless raw.present?
 
     begin
-      payload = Postal::OidcProviders.decode_jwt(raw)
+      payload = Postal::OIDCProviders.decode_jwt(raw)
     rescue JWT::DecodeError => e
       Postal.logger.warn("BCL: invalid logout_token — #{e.message}")
       return render plain: "Invalid logout_token: #{e.message}", status: :bad_request

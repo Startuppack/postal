@@ -11,12 +11,12 @@ module Postal
   #   2. Single-provider (legacy): use the flat `oidc.*` fields
   #
   # Usage:
-  #   Postal::OidcProviders.all                        # => [{id: "keycloak", ...}, ...]
-  #   Postal::OidcProviders.find_by_id("keycloak")
-  #   Postal::OidcProviders.find_by_issuer("https://...")
-  #   Postal::OidcProviders.decode_jwt(raw_token)      # raises JWT::DecodeError
-  #   Postal::OidcProviders.end_session_endpoint_for(provider)
-  module OidcProviders
+  #   Postal::OIDCProviders.all                        # => [{id: "keycloak", ...}, ...]
+  #   Postal::OIDCProviders.find_by_id("keycloak")
+  #   Postal::OIDCProviders.find_by_issuer("https://...")
+  #   Postal::OIDCProviders.decode_jwt(raw_token)      # raises JWT::DecodeError
+  #   Postal::OIDCProviders.end_session_endpoint_for(provider)
+  module OIDCProviders
 
     def self.all
       @all ||= load_providers
@@ -148,7 +148,7 @@ module Postal
     def self.load_raw_config
       YAML.load_file(Postal.config_file_path)
     rescue => e
-      Rails.logger.warn("OidcProviders: could not read raw config: #{e.message}")
+      Rails.logger.warn("OIDCProviders: could not read raw config: #{e.message}")
       {}
     end
 
