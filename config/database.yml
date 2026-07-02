@@ -30,9 +30,9 @@
 %>
 development:
   primary: &primary
-<%= indent.(rw, 4) -%>
+<%= indent.call(rw, 4) -%>
   primary_replica: &replica
-<%= indent.(ro, 4) -%>
+<%= indent.call(ro, 4) -%>
 test:
   primary:
     <<: *primary
