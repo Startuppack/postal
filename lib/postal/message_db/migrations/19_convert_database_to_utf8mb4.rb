@@ -7,7 +7,7 @@ module Postal
 
         def up
           # PostgreSQL is always UTF-8; charset conversion is a no-op.
-          return if @database.provisioner.send(:postgresql?)
+          return if @database.provisioner.postgresql?
 
           @database.query("ALTER DATABASE `#{@database.database_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
           @database.query("ALTER TABLE `#{@database.database_name}`.`clicks` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
