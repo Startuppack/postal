@@ -26,6 +26,7 @@ if Postal::Config.oidc.enabled?
                  scope:          prov[:scopes].map(&:to_sym),
                  uid_field:      prov[:uid_field],
                  issuer:         prov[:issuer],
+                 pkce:           prov[:pkce],
                  discovery:      prov[:discovery],
                  client_options: client_options
       end

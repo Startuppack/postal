@@ -617,6 +617,11 @@ module Postal
         default ["openid", "email"]
       end
 
+      boolean :pkce do
+        description "Enable Proof Key for Code Exchange (PKCE) for this OIDC provider"
+        default false
+      end
+
       string :uid_field do
         description "The field to use to determine the user's UID"
         default "sub"
