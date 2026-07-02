@@ -235,13 +235,16 @@ module Postal
           # Strip MySQL prefix-length hints (col(8)) and backtick quoting
           clean_cols = idx_cols.gsub(/\(\d+\)/, "").gsub("`", "").split(",").map(&:strip)
           quoted     = clean_cols.map { |c| qi(c) }.join(", ")
-          stmts << "CREATE INDEX #{qi_plain(idx_name)} ON #{qt(table_name)} (#{quoted})"
+          # PG index names are schema-scoped (unlike MySQL table-scoped) — prefix with table.
+          pg_idx_name = "#{table_name}_#{idx_name}"
+          stmts << "CREATE INDEX #{qi_plain(pg_idx_name)} ON #{qt(table_name)} (#{quoted})"
         end
 
         (options[:unique_indexes] || {}).each do |idx_name, idx_cols|
           clean_cols = idx_cols.gsub(/\(\d+\)/, "").gsub("`", "").split(",").map(&:strip)
           quoted     = clean_cols.map { |c| qi(c) }.join(", ")
-          stmts << "CREATE UNIQUE INDEX #{qi_plain(idx_name)} ON #{qt(table_name)} (#{quoted})"
+          pg_idx_name = "#{table_name}_#{idx_name}"
+          stmts << "CREATE UNIQUE INDEX #{qi_plain(pg_idx_name)} ON #{qt(table_name)} (#{quoted})"
         end
 
         stmts.join("; ")
