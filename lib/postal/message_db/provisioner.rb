@@ -13,6 +13,7 @@ module Postal
         [/\btinyint\(1\)\s+DEFAULT\s+0\b/i,              "boolean DEFAULT false"],
         [/\btinyint\(1\)\s+DEFAULT\s+NULL\b/i,           "boolean DEFAULT NULL"],
         [/\btinyint\(1\)/i,                               "boolean"],
+        [/\btinyint\b/i,                                  "smallint"],
         [/\blongblob\b/i,                                 "bytea"],
         [/\bmediumblob\b/i,                               "bytea"],
         [/\bmediumtext\b/i,                               "text"],
@@ -200,6 +201,11 @@ module Postal
         tables_removed
       end
 
+      def postgresql?
+        Postal::Config.message_db.respond_to?(:adapter) &&
+          Postal::Config.message_db.adapter.to_s == "postgresql"
+      end
+
       private
 
       # List tables in the current namespace matching a SQL LIKE pattern.
@@ -237,11 +243,6 @@ module Postal
 
       def with_conn(&block)
         Database.connection_pool.use(&block)
-      end
-
-      def postgresql?
-        Postal::Config.message_db.respond_to?(:adapter) &&
-          Postal::Config.message_db.adapter.to_s == "postgresql"
       end
 
       # Translate a MySQL column-type string to its PostgreSQL equivalent.
