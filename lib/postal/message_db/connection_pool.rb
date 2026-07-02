@@ -18,20 +18,14 @@ module Postal
           connection = checkout
 
           yield connection
-        rescue Mysql2::Error => e
-          if e.message =~ /(lost connection|gone away|not connected)/i
-            # If the connection has failed for a connectivity reason
-            # we won't add it back in to the pool so that it'll reconnect
-            # next time.
+        rescue => e
+          if connection && connection_lost?(connection, e)
             do_not_checkin = true
-
-            # If we haven't retried yet, we'll retry the block once more.
             if retried == false
               retried = true
               retry
             end
           end
-
           raise
         ensure
           checkin(connection) unless do_not_checkin
@@ -39,6 +33,19 @@ module Postal
       end
 
       private
+
+      def connection_lost?(connection, error)
+        case connection.adapter
+        when :mysql2
+          error.is_a?(Mysql2::Error) &&
+            error.message =~ /(lost connection|gone away|not connected)/i
+        when :postgresql
+          defined?(PG::Error) && error.is_a?(PG::Error) &&
+            error.message =~ /(server closed the connection|connection not open)/i
+        else
+          false
+        end
+      end
 
       def checkout
         @lock.synchronize do
@@ -62,12 +69,13 @@ module Postal
       end
 
       def establish_connection
-        Mysql2::Client.new(
-          host: Postal::Config.message_db.host,
+        Connection.build(
+          host:     Postal::Config.message_db.host,
           username: Postal::Config.message_db.username,
           password: Postal::Config.message_db.password,
-          port: Postal::Config.message_db.port,
-          encoding: Postal::Config.message_db.encoding
+          port:     Postal::Config.message_db.port,
+          encoding: Postal::Config.message_db.encoding,
+          database: Postal::Config.message_db.respond_to?(:database) ? Postal::Config.message_db.database : "postal_messages"
         )
       end
 

@@ -35,8 +35,8 @@ module Postal
         @schema_version ||= begin
           last_migration = select(:migrations, order: :version, direction: "DESC", limit: 1).first
           last_migration ? last_migration["version"] : 0
-        rescue Mysql2::Error => e
-          e.message =~ /doesn't exist/ ? 0 : raise
+        rescue => e
+          db_error?(e) && e.message =~ /doesn't exist|does not exist/i ? 0 : raise
         end
       end
 
@@ -70,7 +70,7 @@ module Postal
       # Return the total size of all stored messages
       #
       def total_size
-        query("SELECT SUM(size) AS size FROM #{escape_identifier(database_name)}.`raw_message_sizes`").first["size"] || 0
+        query("SELECT SUM(size) AS size FROM #{qualify_table(:raw_message_sizes)}").first["size"] || 0
       end
 
       #
@@ -124,8 +124,8 @@ module Postal
           headers, body = data.split(/\r?\n\r?\n/, 2)
           headers_id = insert(table_name, data: headers)
           body_id = insert(table_name, data: body)
-        rescue Mysql2::Error => e
-          raise unless e.message =~ /doesn't exist/
+        rescue => e
+          raise unless db_error?(e) && e.message =~ /doesn't exist|does not exist/i
 
           provisioner.create_raw_table(table_name)
           retry
@@ -155,7 +155,7 @@ module Postal
         else
           sql_query << " *"
         end
-        sql_query << " FROM #{escape_identifier(database_name)}.#{escape_identifier(table)}"
+        sql_query << " FROM #{qualify_table(table)}"
         if options[:where].present?
           sql_query << (" " + build_where_string(options[:where], " AND "))
         end
@@ -211,14 +211,14 @@ module Postal
       # Will return the total number of affected rows.
       #
       def update(table, attributes, options = {})
-        sql_query = "UPDATE #{escape_identifier(database_name)}.#{escape_identifier(table)} SET"
+        sql_query = "UPDATE #{qualify_table(table)} SET"
         sql_query << " #{hash_to_sql(attributes)}"
         if options[:where]
           sql_query << (" " + build_where_string(options[:where]))
         end
-        with_mysql do |mysql|
-          query_on_connection(mysql, sql_query)
-          mysql.affected_rows
+        with_connection do |conn|
+          conn.query(sql_query)
+          conn.affected_rows
         end
       end
 
@@ -227,12 +227,11 @@ module Postal
       # Will return the ID of the new item.
       #
       def insert(table, attributes)
-        sql_query = "INSERT INTO #{escape_identifier(database_name)}.#{escape_identifier(table)}"
+        sql_query = "INSERT INTO #{qualify_table(table)}"
         sql_query << (" (" + attributes.keys.map { |k| escape_identifier(k) }.join(", ") + ")")
         sql_query << (" VALUES (" + attributes.values.map { |v| escape(v) }.join(", ") + ")")
-        with_mysql do |mysql|
-          query_on_connection(mysql, sql_query)
-          mysql.last_id
+        with_connection do |conn|
+          conn.insert(sql_query)
         end
       end
 
@@ -240,15 +239,13 @@ module Postal
       # Insert multiple rows at the same time in the same query
       #
       def insert_multi(table, keys, values)
-        if values.empty?
-          nil
-        else
-          sql_query = "INSERT INTO #{escape_identifier(database_name)}.#{escape_identifier(table)}"
-          sql_query << (" (" + keys.map { |k| escape_identifier(k) }.join(", ") + ")")
-          sql_query << " VALUES "
-          sql_query << values.map { |v| "(" + v.map { |r| escape(r) }.join(", ") + ")" }.join(", ")
-          query(sql_query)
-        end
+        return nil if values.empty?
+
+        sql_query = "INSERT INTO #{qualify_table(table)}"
+        sql_query << (" (" + keys.map { |k| escape_identifier(k) }.join(", ") + ")")
+        sql_query << " VALUES "
+        sql_query << values.map { |v| "(" + v.map { |r| escape(r) }.join(", ") + ")" }.join(", ")
+        query(sql_query)
       end
 
       #
@@ -260,11 +257,11 @@ module Postal
       # Will return the total number of affected rows.
       #
       def delete(table, options = {})
-        sql_query = "DELETE FROM #{escape_identifier(database_name)}.#{escape_identifier(table)}"
+        sql_query = "DELETE FROM #{qualify_table(table)}"
         sql_query << (" " + build_where_string(options[:where], " AND "))
-        with_mysql do |mysql|
-          query_on_connection(mysql, sql_query)
-          mysql.affected_rows
+        with_connection do |conn|
+          conn.query(sql_query)
+          conn.affected_rows
         end
       end
 
@@ -300,49 +297,49 @@ module Postal
       end
 
       def escape(value)
-        with_mysql do |mysql|
+        with_connection do |conn|
           if value == true
-            "1"
+            conn.mysql2? ? "1" : "TRUE"
           elsif value == false
-            "0"
+            conn.mysql2? ? "0" : "FALSE"
           elsif value.nil? || value.to_s.empty?
             "NULL"
           else
-            "'" + mysql.escape(value.to_s) + "'"
+            "'" + conn.escape_string(value.to_s) + "'"
           end
         end
       end
 
-      def query(query)
-        with_mysql do |mysql|
-          query_on_connection(mysql, query)
+      def query(sql)
+        with_connection do |conn|
+          start_time = Time.now.to_f
+          result = conn.query(sql, cast_booleans: true)
+          time = Time.now.to_f - start_time
+          logger.debug "  \e[4;34mMessageDB Query (#{time.round(2)}s) \e[0m  \e[33m#{sql}\e[0m"
+          if time > 0.05 && sql =~ /\A(SELECT|UPDATE|DELETE) / && conn.mysql2?
+            id = SecureRandom.alphanumeric(8)
+            explain_result = ResultForExplainPrinter.new(conn.query("EXPLAIN #{sql}"))
+            logger.info "  [#{id}] EXPLAIN #{sql}"
+            ActiveRecord::ConnectionAdapters::MySQL::ExplainPrettyPrinter.new.pp(explain_result, time).split("\n").each do |line|
+              logger.info "  [#{id}] " + line
+            end
+          end
+          result
         end
       end
 
       private
 
-      def query_on_connection(connection, query)
-        start_time = Time.now.to_f
-        result = connection.query(query, cast_booleans: true)
-        time = Time.now.to_f - start_time
-        logger.debug "  \e[4;34mMessageDB Query (#{time.round(2)}s) \e[0m  \e[33m#{query}\e[0m"
-        if time > 0.05 && query =~ /\A(SELECT|UPDATE|DELETE) /
-          id = SecureRandom.alphanumeric(8)
-          explain_result = ResultForExplainPrinter.new(connection.query("EXPLAIN #{query}"))
-          logger.info "  [#{id}] EXPLAIN #{query}"
-          ActiveRecord::ConnectionAdapters::MySQL::ExplainPrettyPrinter.new.pp(explain_result, time).split("\n").each do |line|
-            logger.info "  [#{id}] " + line
-          end
-        end
-        result
-      end
-
       def logger
         defined?(Rails) ? Rails.logger : Logger.new($stdout)
       end
 
-      def with_mysql(&block)
+      def with_connection(&block)
         self.class.connection_pool.use(&block)
+      end
+
+      def db_error?(e)
+        e.is_a?(Mysql2::Error) || (defined?(PG::Error) && e.is_a?(PG::Error))
       end
 
       def build_where_string(attributes, joiner = ", ")
@@ -378,12 +375,23 @@ module Postal
         end.join(joiner)
       end
 
-      # Escape a value for safe use as a MySQL identifier (e.g. a column or
-      # table name). Identifiers are wrapped in backticks and any backtick
-      # within the identifier is doubled so it cannot break out of the quoting
-      # and inject arbitrary SQL.
+      # Quote a SQL identifier (column/table name) using the active adapter's quoting style.
       def escape_identifier(identifier)
-        "`" + identifier.to_s.gsub("`", "``") + "`"
+        if postgresql?
+          "\"#{identifier.to_s.gsub('"', '""')}\""
+        else
+          "`#{identifier.to_s.gsub('`', '``')}`"
+        end
+      end
+
+      # Return the fully qualified "namespace.table" SQL fragment.
+      def qualify_table(table)
+        "#{escape_identifier(database_name)}.#{escape_identifier(table)}"
+      end
+
+      def postgresql?
+        Postal::Config.message_db.respond_to?(:adapter) &&
+          Postal::Config.message_db.adapter.to_s == "postgresql"
       end
 
     end

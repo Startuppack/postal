@@ -151,68 +151,99 @@ module Postal
     end
 
     group :main_db do
+      string :adapter do
+        description "Database adapter: mysql2 (default) or postgresql"
+        default "mysql2"
+      end
+
       string :host do
-        description "Hostname for the main MariaDB server"
+        description "Hostname for the primary (read-write) database server"
         default "localhost"
       end
 
       integer :port do
-        description "The MariaDB port to connect to"
+        description "Port for the primary database server (mysql2: 3306, postgresql: 5432)"
         default 3306
       end
 
       string :username do
-        description "The MariaDB username"
+        description "Username for the primary database server"
         default "postal"
       end
 
       string :password do
-        description "The MariaDB password"
+        description "Password for the primary database server"
       end
 
       string :database do
-        description "The MariaDB database name"
+        description "Database name"
         default "postal"
       end
 
       integer :pool_size do
-        description "The maximum size of the MariaDB connection pool"
+        description "Maximum size of the database connection pool"
         default 5
       end
 
       string :encoding do
-        description "The encoding to use when connecting to the MariaDB database"
+        description "Encoding for MySQL2 connections (ignored for PostgreSQL)"
         default "utf8mb4"
+      end
+
+      string :ro_host do
+        description "Hostname for the read-only replica (optional; falls back to primary host)"
+      end
+
+      integer :ro_port do
+        description "Port for the read-only replica (optional; falls back to primary port)"
+      end
+
+      string :ro_username do
+        description "Username for the read-only replica (optional; falls back to primary username)"
+      end
+
+      string :ro_password do
+        description "Password for the read-only replica (optional; falls back to primary password)"
       end
     end
 
     group :message_db do
+      string :adapter do
+        description "Database adapter for per-server message storage: mysql2 (default) or postgresql"
+        default "mysql2"
+      end
+
       string :host do
-        description "Hostname for the MariaDB server which stores the mail server databases"
+        description "Hostname for the message database server"
         default "localhost"
       end
 
       integer :port do
-        description "The MariaDB port to connect to"
+        description "Port for the message database server (mysql2: 3306, postgresql: 5432)"
         default 3306
       end
 
       string :username do
-        description "The MariaDB username"
+        description "Username for the message database server"
         default "postal"
       end
 
       string :password do
-        description "The MariaDB password"
+        description "Password for the message database server"
       end
 
       string :encoding do
-        description "The encoding to use when connecting to the MariaDB database"
+        description "Encoding for MySQL2 message DB connections (ignored for PostgreSQL)"
         default "utf8mb4"
       end
 
+      string :database do
+        description "PostgreSQL database that hosts all per-server schemas (postgresql adapter only)"
+        default "postal_messages"
+      end
+
       string :database_name_prefix do
-        description "The MariaDB prefix to add to database names"
+        description "Prefix for per-server database/schema names"
         default "postal"
       end
     end

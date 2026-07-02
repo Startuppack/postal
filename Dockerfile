@@ -14,6 +14,7 @@ RUN apt-get update && \
     build-essential  \
     netcat-openbsd \
     libmariadb-dev \
+    libpq-dev \
     libcap2-bin \
     nano \
     libyaml-dev \

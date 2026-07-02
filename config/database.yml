@@ -1,19 +1,46 @@
-default: &default
-  adapter: mysql2
-  reconnect: true
-  encoding: "<%= Postal::Config.main_db.encoding %>"
-  pool: <%= Postal::Config.main_db.pool_size %>
-  username: "<%= Postal::Config.main_db.username %>"
-  password: "<%= Postal::Config.main_db.password %>"
-  host: "<%= Postal::Config.main_db.host %>"
-  port: <%= Postal::Config.main_db.port %>
-  database: "<%= Postal::Config.main_db.database %>"
+<%
+  db      = Postal::Config.main_db
+  adapter = db.adapter
+  ro_host = db.ro_host.presence
 
+  # Build RW config hash
+  rw = {
+    "adapter"  => adapter,
+    "host"     => db.host,
+    "port"     => db.port,
+    "username" => db.username,
+    "password" => db.password,
+    "database" => db.database,
+    "pool"     => db.pool_size,
+  }
+  rw["reconnect"] = true          if adapter == "mysql2"
+  rw["encoding"]  = db.encoding   if adapter == "mysql2"
+
+  # Build RO config (falls back to RW if no replica configured)
+  ro = rw.merge(
+    "host"     => ro_host || db.host,
+    "port"     => (ro_host && db.ro_port) || db.port,
+    "username" => (ro_host && db.ro_username) || db.username,
+    "password" => (ro_host && db.ro_password) || db.password,
+    "replica"  => true,
+  ).compact
+
+  # Indent a to_yaml dump (strips --- header, adds N spaces)
+  indent = ->(h, n) { h.to_yaml.sub(/\A---\n/, "").each_line.map { |l| " " * n + l }.join }
+%>
 development:
-  <<: *default
+  primary: &primary
+<%= indent.(rw, 4) -%>
+  primary_replica: &replica
+<%= indent.(ro, 4) -%>
+test:
+  primary:
+    <<: *primary
+  primary_replica:
+    <<: *replica
 
 production:
-  <<: *default
-
-test:
-  <<: *default
+  primary:
+    <<: *primary
+  primary_replica:
+    <<: *replica
