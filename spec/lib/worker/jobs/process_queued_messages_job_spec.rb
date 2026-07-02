@@ -72,7 +72,7 @@ module Worker
 
         context "when there is a locked queued message without an IP address with a retry time in the past" do
           it "does nothing" do
-            queued_message = create(:queued_message, :locked, ip_address: nil, retry_after: 1.month.ago)
+            queued_message = create(:queued_message, :locked, ip_address: nil, retry_after: 1.month.ago, locked_at: 1.minute.ago)
             job.call
             expect(MessageDequeuer).to_not have_received(:process)
             expect(queued_message.reload.locked?).to be true

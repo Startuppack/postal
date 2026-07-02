@@ -415,7 +415,7 @@ RSpec.describe SMTPSender do
           expect(result).to be_a SendResult
           expect(result).to have_attributes(
             type: "SoftFail",
-            details: /Temporary SMTP delivery error when sending/
+            details: /Temporary SMTP delivery timeout when sending/
           )
         end
 
