@@ -219,7 +219,7 @@ module Postal
 
       # Build CREATE TABLE (+ CREATE INDEX) SQL for PostgreSQL.
       def create_table_query_pg(table_name, options)
-        pk = options[:primary_key] ? options[:primary_key].to_s : "id"
+        pk = (options[:primary_key].to_s.gsub('`', '') if options[:primary_key]) || "id"
         cols = options[:columns].map do |col_name, col_type|
           "#{qi(col_name)} #{pg_type(col_type)}"
         end
@@ -262,7 +262,7 @@ module Postal
               "UNIQUE KEY `#{idx_name}` (#{idx_opts})"
             end.join(", ")
           end
-          pk = options[:primary_key] ? options[:primary_key].to_s : "id"
+          pk = (options[:primary_key].to_s.gsub('`', '') if options[:primary_key]) || "id"
           s << ", PRIMARY KEY (`#{pk}`)"
           s << ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;"
         end
