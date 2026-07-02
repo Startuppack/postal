@@ -69,6 +69,7 @@ module Postal
 
       # Execute an INSERT statement and return the generated primary-key value.
       # For PostgreSQL, appends RETURNING id to the statement.
+      # Falls back to plain INSERT (last_id = nil) when the table has no "id" column.
       def insert(sql)
         case @adapter
         when :mysql2
@@ -76,10 +77,16 @@ module Postal
           @affected_rows = @raw_conn.affected_rows
           @last_id       = @raw_conn.last_id
         when :postgresql
-          result = @raw_conn.exec("#{sql} RETURNING id")
-          result.map_types!(@type_map) if @type_map
-          @affected_rows = result.cmd_tuples
-          @last_id = result.ntuples > 0 ? result.getvalue(0, 0).to_i : nil
+          begin
+            result = @raw_conn.exec("#{sql} RETURNING id")
+            result.map_types!(@type_map) if @type_map
+            @affected_rows = result.cmd_tuples
+            @last_id = result.ntuples > 0 ? result.getvalue(0, 0).to_i : nil
+          rescue PG::UndefinedColumn
+            result = @raw_conn.exec(sql)
+            @affected_rows = result.cmd_tuples
+            @last_id = nil
+          end
         end
         @last_id
       end
