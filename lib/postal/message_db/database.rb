@@ -394,6 +394,8 @@ module Postal
           Postal::Config.message_db.adapter.to_s == "postgresql"
       end
 
+      public :escape_identifier, :qualify_table, :postgresql?
+
     end
   end
 end
