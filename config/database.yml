@@ -1,46 +1,47 @@
 <%
-  db      = Postal::Config.main_db
-  adapter = db.adapter
-  ro_host = db.ro_host.presence
+  db    = Postal::Config.main_db
+  adp   = db.adapter.to_s
+  mysql = adp == "mysql2"
 
-  # Build RW config hash
-  rw = {
-    "adapter"  => adapter,
-    "host"     => db.host,
-    "port"     => db.port,
-    "username" => db.username,
-    "password" => db.password,
-    "database" => db.database,
-    "pool"     => db.pool_size,
-  }
-  rw["reconnect"] = true          if adapter == "mysql2"
-  rw["encoding"]  = db.encoding   if adapter == "mysql2"
+  rw_host = db.host.to_s
+  rw_port = db.port.to_i
+  rw_user = db.username.to_s
+  rw_pass = db.password.to_s
+  rw_db   = db.database.to_s
+  pool    = db.pool_size.to_i
+  enc     = mysql ? db.encoding.to_s : nil
 
-  # Build RO config (falls back to RW if no replica configured)
-  ro = rw.merge(
-    "host"     => ro_host || db.host,
-    "port"     => (ro_host && db.ro_port) || db.port,
-    "username" => (ro_host && db.ro_username) || db.username,
-    "password" => (ro_host && db.ro_password) || db.password,
-    "replica"  => true,
-  ).compact
-
-  # Indent a to_yaml dump (strips --- header, adds N spaces)
-  indent = ->(h, n) { h.to_yaml.sub(/\A---\n/, "").each_line.map { |l| " " * n + l }.join }
+  ro_host = db.respond_to?(:ro_host) ? db.ro_host.to_s.presence : nil
+  ro_h  = ro_host || rw_host
+  ro_p  = (ro_host && db.respond_to?(:ro_port)     ? db.ro_port.to_i     : nil) || rw_port
+  ro_u  = (ro_host && db.respond_to?(:ro_username) ? db.ro_username.to_s : nil) || rw_user
+  ro_pw = (ro_host && db.respond_to?(:ro_password) ? db.ro_password.to_s : nil) || rw_pass
 %>
-development:
-  primary: &primary
-<%= indent.call(rw, 4) -%>
-  primary_replica: &replica
-<%= indent.call(ro, 4) -%>
-test:
+<% %w[development test production].each do |env| -%>
+<%= env %>:
   primary:
-    <<: *primary
+    adapter: "<%= adp %>"
+    host: "<%= rw_host %>"
+    port: <%= rw_port %>
+    username: "<%= rw_user %>"
+    password: "<%= rw_pass %>"
+    database: "<%= rw_db %>"
+    pool: <%= pool %>
+<% if mysql -%>
+    encoding: "<%= enc %>"
+    reconnect: true
+<% end -%>
   primary_replica:
-    <<: *replica
-
-production:
-  primary:
-    <<: *primary
-  primary_replica:
-    <<: *replica
+    adapter: "<%= adp %>"
+    host: "<%= ro_h %>"
+    port: <%= ro_p %>
+    username: "<%= ro_u %>"
+    password: "<%= ro_pw %>"
+    database: "<%= rw_db %>"
+    pool: <%= pool %>
+    replica: true
+<% if mysql -%>
+    encoding: "<%= enc %>"
+    reconnect: true
+<% end -%>
+<% end -%>
