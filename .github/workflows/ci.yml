@@ -96,6 +96,12 @@ jobs:
           build-args: |
             VERSION=${{ steps.meta.outputs.version }}
             BRANCH=main
+      - name: Make package public
+        run: |
+          gh api -X PATCH /orgs/Startuppack/packages/container/postal \
+            -f visibility=public || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   pages:
     name: Deploy GitHub Pages
