@@ -5,7 +5,7 @@
 # Back-Channel Logout (BCL) spec: https://openid.net/specs/openid-connect-backchannel-1_0.html
 # When the IdP (e.g. Keycloak) logs a user out, it POSTs a signed logout_token here.
 # We validate the token and invalidate all active Authie sessions for that user.
-class OidcLogoutController < ApplicationController
+class OIDCLogoutController < ApplicationController
 
   skip_before_action :login_required
   skip_before_action :verify_authenticity_token
