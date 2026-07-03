@@ -4,6 +4,8 @@
 
 This is a fork maintained by [Startup Pack](https://startuppack.eu) that extends Postal with a full **provisioning API**, multi-tenant SCIM, and enterprise SSO features not available in the upstream project.
 
+> ⚠️ **Still running in dev mode.** The Startup Pack deployment currently runs in **development** mode (Rails `development` — `RAILS_ENV` is not set, hence the "dev" badge in the UI footer). Before real production use, switch it to **production**: set `RAILS_ENV=production` (and `NODE_ENV=production`) on the web/smtp/worker processes, confirm `secret_key_base` and precompiled assets. Until then expect verbose logs, no asset caching and dev-mode behaviour.
+
 * [Documentation](https://startuppack.github.io/postal/)
 * [What this fork adds](#what-this-fork-adds)
 * [API v2 reference](https://startuppack.github.io/postal/#api)
