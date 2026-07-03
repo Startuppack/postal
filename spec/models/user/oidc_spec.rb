@@ -24,6 +24,9 @@ RSpec.describe User do
       allow(Postal::Config.oidc).to receive(:enabled?).and_return(true)
       allow(Postal::Config.oidc).to receive(:issuer).and_return(issuer)
       allow(Postal::Config.oidc).to receive(:email_address_field).and_return("email")
+      # `auth` carries the UID under "sub"; pin uid_field explicitly so this spec
+      # is independent of the configured default (now "preferred_username").
+      allow(Postal::Config.oidc).to receive(:uid_field).and_return("sub")
     end
 
     let(:uid) { "abcdef" }
