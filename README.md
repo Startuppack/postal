@@ -17,6 +17,8 @@ This is a fork maintained by [Startup Pack](https://startuppack.eu) that extends
 
 ## What this fork adds
 
+> 🚧 **Major rewrite in progress.** The provisioning API, SCIM and SSO layers described below are being redesigned as a proper Rails engine with a stable public contract. The current implementation works but is considered **alpha** — interfaces may change without notice until the rewrite ships.
+
 | Feature | Description |
 |---|---|
 | **Admin REST API v2** | Provision orgs, servers, domains, credentials and users over HTTP — no Rails console needed |
