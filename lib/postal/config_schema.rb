@@ -388,6 +388,13 @@ module Postal
         default "postal"
       end
 
+      string :dkim_cname_domain do
+        description "If set, DKIM is published as a CNAME to <dkim_identifier>.<this domain> " \
+                    "(which must host the key TXT record) instead of a raw TXT record on the " \
+                    "sending domain. Lets a customer add a short CNAME instead of a long key. " \
+                    "e.g. dkim1.startuppack.eu"
+      end
+
       string :domain_verify_prefix do
         description "The prefix to add before TXT record verification string"
         default "postal-verification"

@@ -56,10 +56,17 @@
       %span.label.label--orange Warning
       = @domain.dkim_error
 
-  %p.pageContent__text
-    You need to add a new TXT record with the name <b>#{@domain.dkim_record_name}</b>
-    with the following content.
-  %pre.codeBlock.u-margin= @domain.dkim_record
+  - if @domain.dkim_cname?
+    %p.pageContent__text
+      You need to add a new CNAME record with the name <b>#{@domain.dkim_record_name}</b>
+      pointing to the following target. The DKIM key itself is hosted for you at
+      that target — you only need this CNAME.
+    %pre.codeBlock.u-margin= @domain.dkim_cname_value
+  - else
+    %p.pageContent__text
+      You need to add a new TXT record with the name <b>#{@domain.dkim_record_name}</b>
+      with the following content.
+    %pre.codeBlock.u-margin= @domain.dkim_record
 
   %h3.pageContent__subTitle Return Path
   - if @domain.return_path_status == 'OK'

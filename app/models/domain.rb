@@ -127,6 +127,21 @@ class Domain < ApplicationRecord
     "#{identifier}._domainkey"
   end
 
+  # When `dns.dkim_cname_domain` is configured, DKIM is published as a CNAME on
+  # the sending domain pointing at a record we host (which carries the key TXT),
+  # instead of the customer having to paste the long key. The CNAME target is
+  # `<dkim_identifier>.<dkim_cname_domain>`, e.g. postal-ABC123.dkim1.startuppack.eu.
+  def dkim_cname?
+    Postal::Config.dns.dkim_cname_domain.present? && dkim_identifier.present?
+  end
+
+  # The value (target) of the CNAME the customer adds at `dkim_record_name`.
+  def dkim_cname_value
+    return unless dkim_cname?
+
+    "#{dkim_identifier}.#{Postal::Config.dns.dkim_cname_domain}"
+  end
+
   def return_path_domain
     "#{Postal::Config.dns.custom_return_path_prefix}.#{name}"
   end
