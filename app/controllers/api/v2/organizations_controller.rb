@@ -18,6 +18,30 @@ module API
 
       def create
         owner = User.find_by!(email_address: params[:owner_email])
+
+        # Self-heal teardown residuals: a soft-deleted org keeps its (unique)
+        # permalink, so a plain create would fail with "permalink has already
+        # been taken" and block re-provisioning after a delete. If a soft-deleted
+        # org with this permalink exists, restore it (and its servers) instead.
+        existing = Organization.deleted.find_by(permalink: org_params[:permalink])
+        if existing
+          existing.assign_attributes(org_params)
+          existing.owner = owner
+          existing.deleted_at = nil
+          existing.save!
+          existing.servers.deleted.update_all(deleted_at: nil)
+          unless existing.organization_users.where(user: owner).exists?
+            existing.organization_users.create!(user: owner, user_type: "User",
+                                                 role: "admin", admin: true, all_servers: true)
+          end
+          if !params[:skip_default_server] && existing.servers.present.empty?
+            server = existing.servers.new(name: existing.name, mode: "Live")
+            server.save!
+            server.credentials.create!(name: "Default SMTP", type: "SMTP")
+          end
+          return render json: serialize(existing), status: :created
+        end
+
         org = Organization.new(org_params)
         org.owner = owner
         org.save!
