@@ -63,7 +63,15 @@ module API
       end
 
       def destroy
-        @organization.soft_destroy
+        if purge_requested?
+          # Hard purge: `destroy` cascades servers (each Server's after_commit on
+          # :destroy drops its message-DB schema), domains, members, credentials,
+          # endpoints and routes — nothing is left behind. Use for a full tenant
+          # teardown; the default soft-delete keeps the org recoverable.
+          @organization.destroy
+        else
+          @organization.soft_destroy
+        end
         head :no_content
       end
 
@@ -80,7 +88,18 @@ module API
       private
 
       def set_organization
-        @organization = organizations_scope.find_by!(permalink: params[:id])
+        # A purge must be able to reach an already soft-deleted residual, so widen
+        # the scope to include deleted orgs for that case only.
+        scope = if action_name == "destroy" && purge_requested?
+                  api_admin? ? Organization.all : current_api_user.organizations
+                else
+                  organizations_scope
+                end
+        @organization = scope.find_by!(permalink: params[:id])
+      end
+
+      def purge_requested?
+        ActiveModel::Type::Boolean.new.cast(params[:purge])
       end
 
       def org_params
