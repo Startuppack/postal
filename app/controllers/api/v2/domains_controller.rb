@@ -74,6 +74,8 @@ module API
           dns_verification_string: domain.dns_verification_string,
           dkim_record_name:        domain.dkim_record_name,
           dkim_record:             domain.dkim_record,
+          dkim_cname:              domain.dkim_cname?,
+          dkim_cname_value:        domain.dkim_cname_value,
           spf_status:              domain.spf_status,
           spf_error:               domain.spf_error,
           dkim_status:             domain.dkim_status,
