@@ -75,7 +75,9 @@ class ServersController < ApplicationController
       return
     end
 
-    @server.soft_destroy
+    # Hard delete — after_commit(on: :destroy) drops the message-DB schema so
+    # the server's stored e-mail is gone for good. No soft-deleted residual.
+    @server.destroy
     redirect_to_with_json organization_root_path(organization), notice: "#{@server.name} has been deleted successfully"
   end
 

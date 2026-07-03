@@ -53,7 +53,9 @@ class OrganizationsController < ApplicationController
       return
     end
 
-    organization.soft_destroy
+    # Hard delete — cascades servers (drops each message-DB schema), domains,
+    # members and credentials. No recoverable soft-deleted residual.
+    organization.destroy
     redirect_to_with_json root_path(nrd: 1), notice: "#{@organization.name} has been removed successfully."
   end
 

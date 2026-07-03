@@ -30,7 +30,9 @@ module API
       end
 
       def destroy
-        @server.soft_destroy
+        # Hard delete — after_commit(on: :destroy) drops the message-DB schema.
+        # No soft-delete: delete means delete.
+        @server.destroy
         head :no_content
       end
 
