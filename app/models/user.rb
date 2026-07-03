@@ -124,7 +124,23 @@ class User < ApplicationRecord
       user.oidc_uid = uid
       user.oidc_issuer = config.issuer
       user.email_address = oidc_email_address if oidc_email_address.present?
-      user.first_name, user.last_name = oidc_name.split(/\s+/, 2) if oidc_name.present?
+
+      # Derive names. Prefer explicit given_name/family_name claims, then fall
+      # back to splitting the display name. Never blank out an existing name:
+      # some IdPs (e.g. MS SSO) omit family_name entirely, and last_name is a
+      # required field — clobbering it with nil made the whole login fail.
+      given  = auth["given_name"].presence
+      family = auth["family_name"].presence
+      if given.present? || family.present?
+        user.first_name = given if given.present?
+        user.last_name  = family if family.present?
+      elsif oidc_name.present?
+        first, last = oidc_name.split(/\s+/, 2)
+        user.first_name = first if first.present?
+        user.last_name  = last if last.present?
+      end
+      user.first_name = user.first_name.presence || (oidc_email_address || "").split("@").first
+      user.last_name  = user.last_name.presence || user.first_name
       user.password = nil
       user.save!
 

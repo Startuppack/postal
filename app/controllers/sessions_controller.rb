@@ -137,7 +137,9 @@ class SessionsController < ApplicationController
 
     full_name  = raw[cfg[:name_field] || "name"].to_s
     first_name = raw["given_name"].presence || full_name.split(/\s+/, 2).first.presence || email.split("@").first
-    last_name  = raw["family_name"].presence || full_name.split(/\s+/, 2)[1].to_s
+    # last_name is required; some IdPs (e.g. MS SSO) omit family_name — fall
+    # back to the display-name tail, then to first_name so login never 422s.
+    last_name  = raw["family_name"].presence || full_name.split(/\s+/, 2)[1].presence || first_name
 
     user = User.new(
       email_address: email,

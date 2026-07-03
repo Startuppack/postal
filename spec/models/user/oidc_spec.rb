@@ -60,6 +60,28 @@ RSpec.describe User do
         result
         expect(logger).to have_logged(/found user with UID abcdef/i)
       end
+
+      context "when the token has no family_name and a single-word display name (e.g. MS SSO)" do
+        let(:oidc_name) { "Adrien" }
+
+        it "keeps last_name non-blank so the update does not fail validation" do
+          expect { result }.not_to raise_error
+          @existing_user.reload
+          expect(@existing_user.first_name).to eq "Adrien"
+          expect(@existing_user.last_name).to be_present
+        end
+      end
+
+      context "when the token carries given_name but no family_name" do
+        let(:auth) { { "sub" => uid, "email" => oidc_email, "name" => oidc_name, "given_name" => "Adrien" } }
+
+        it "sets first_name and preserves the existing last_name" do
+          result
+          @existing_user.reload
+          expect(@existing_user.first_name).to eq "Adrien"
+          expect(@existing_user.last_name).to be_present
+        end
+      end
     end
 
     context "when there is no user which matches the UID and issuer" do
