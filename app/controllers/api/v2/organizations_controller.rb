@@ -19,27 +19,17 @@ module API
       def create
         owner = User.find_by!(email_address: params[:owner_email])
 
-        # Self-heal teardown residuals: a soft-deleted org keeps its (unique)
-        # permalink, so a plain create would fail with "permalink has already
-        # been taken" and block re-provisioning after a delete. If a soft-deleted
-        # org with this permalink exists, restore it (and its servers) instead.
-        existing = Organization.deleted.find_by(permalink: org_params[:permalink])
-        if existing
-          existing.assign_attributes(org_params)
-          existing.owner = owner
-          existing.deleted_at = nil
-          existing.save!
-          existing.servers.deleted.update_all(deleted_at: nil)
-          unless existing.organization_users.where(user: owner).exists?
-            existing.organization_users.create!(user: owner, user_type: "User",
-                                                 role: "admin", admin: true, all_servers: true)
-          end
-          if !params[:skip_default_server] && existing.servers.present.empty?
-            server = existing.servers.new(name: existing.name, mode: "Live")
-            server.save!
-            server.credentials.create!(name: "Default SMTP", type: "SMTP")
-          end
-          return render json: serialize(existing), status: :created
+        # A soft-deleted residual keeps its (unique) permalink, so a plain create
+        # would fail with "permalink has already been taken". We must NOT restore
+        # such a residual: a slug can be reclaimed by a *different* customer, and
+        # restoring would resurrect the previous tenant's servers, message data
+        # and credentials — a cross-tenant data leak. Instead, hard-purge any
+        # residual (org#destroy cascades server#destroy, whose after_commit drops
+        # the per-server message-DB schema) so the new org starts from a clean,
+        # empty slate.
+        Organization.deleted.where(permalink: org_params[:permalink]).find_each do |residual|
+          residual.servers.find_each(&:destroy)
+          residual.destroy
         end
 
         org = Organization.new(org_params)
