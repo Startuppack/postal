@@ -159,19 +159,25 @@ module Postal
         if options[:where].present?
           sql_query << (" " + build_where_string(options[:where], " AND "))
         end
-        if options[:order]
-          direction = (options[:direction] || "ASC").upcase
-          raise Postal::Error, "Invalid direction #{options[:direction]}" unless %w[ASC DESC].include?(direction)
+        # ORDER BY / LIMIT / OFFSET are meaningless for a COUNT and, under
+        # PostgreSQL, "ORDER BY <col>" alongside an aggregate (COUNT) raises
+        # GroupingError ("column must appear in the GROUP BY clause"). MySQL
+        # silently ignored it; PG is strict. Skip them when counting.
+        unless options[:count]
+          if options[:order]
+            direction = (options[:direction] || "ASC").upcase
+            raise Postal::Error, "Invalid direction #{options[:direction]}" unless %w[ASC DESC].include?(direction)
 
-          sql_query << " ORDER BY #{escape_identifier(options[:order])} #{direction}"
-        end
+            sql_query << " ORDER BY #{escape_identifier(options[:order])} #{direction}"
+          end
 
-        if options[:limit]
-          sql_query << " LIMIT #{options[:limit]}"
-        end
+          if options[:limit]
+            sql_query << " LIMIT #{options[:limit]}"
+          end
 
-        if options[:offset]
-          sql_query << " OFFSET #{options[:offset]}"
+          if options[:offset]
+            sql_query << " OFFSET #{options[:offset]}"
+          end
         end
 
         result = query(sql_query)
