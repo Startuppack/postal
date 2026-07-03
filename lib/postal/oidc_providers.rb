@@ -112,7 +112,7 @@ module Postal
         identifier:              p["identifier"].to_s,
         secret:                  p["secret"].to_s,
         scopes:                  (Array(p["scopes"]).map(&:to_s).presence || ["openid", "email"]),
-        uid_field:               (p["uid_field"].presence || "sub").to_s,
+        uid_field:               (p["uid_field"].presence || "preferred_username").to_s,
         email_address_field:     (p["email_address_field"].presence || "email").to_s,
         name_field:              (p["name_field"].presence || "name").to_s,
         pkce:                    p.fetch("pkce", false),

@@ -623,8 +623,13 @@ module Postal
       end
 
       string :uid_field do
-        description "The field to use to determine the user's UID"
-        default "sub"
+        description "The claim to use as the user's stable identity (username). " \
+                    "Defaults to 'preferred_username' so users are keyed on their " \
+                    "IdP username rather than their email (which can change). Set to " \
+                    "'sub' or 'email' if your IdP does not expose a stable username. " \
+                    "On first login an API/SCIM-pre-created user (oidc_uid still nil) " \
+                    "is matched by email_address_field then backfilled with this uid."
+        default "preferred_username"
       end
 
       string :email_address_field do

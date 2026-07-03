@@ -253,8 +253,11 @@ oidc:
   scopes:
     - openid
     - email
-  # The field to use to determine the user's UID
-  uid_field: sub
+  # The claim used as the user's stable identity (username). Defaults to
+  # 'preferred_username' so users are keyed on their IdP username, not their
+  # email (which can change). Use 'sub' or 'email' if your IdP has no stable
+  # username claim.
+  uid_field: preferred_username
   # The field to use to determine the user's email address
   email_address_field: email
   # The field to use to determine the user's name

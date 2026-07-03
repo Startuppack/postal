@@ -143,7 +143,7 @@ class SessionsController < ApplicationController
       email_address: email,
       first_name:    first_name,
       last_name:     last_name,
-      oidc_uid:      raw[cfg[:uid_field] || "sub"],
+      oidc_uid:      raw[cfg[:uid_field] || "preferred_username"],
       oidc_issuer:   cfg[:issuer] || Postal::Config.oidc.issuer
     )
     user.password = SecureRandom.hex(24)
