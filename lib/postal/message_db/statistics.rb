@@ -21,9 +21,15 @@ module Postal
         end
 
         time_i = time.send("beginning_of_#{STATS_GAPS[type]}").utc.to_i
-        sql_query = "INSERT INTO `#{@database.database_name}`.`stats_#{type}` (time, #{COUNTERS.join(', ')})"
+        table = "stats_#{type}"
+        sql_query = "INSERT INTO #{@database.qualify_table(table)} (time, #{COUNTERS.join(', ')})"
         sql_query << " VALUES (#{time_i}, #{initial_values.join(', ')})"
-        sql_query << " ON DUPLICATE KEY UPDATE #{field} = #{field} + 1"
+        sql_query << if @database.postgresql?
+                       # PG upsert on the unique `time` index (stats_*_on_time).
+                       " ON CONFLICT (time) DO UPDATE SET #{field} = #{@database.escape_identifier(table)}.#{field} + 1"
+                     else
+                       " ON DUPLICATE KEY UPDATE #{field} = #{field} + 1"
+                     end
         @database.query(sql_query)
       end
 

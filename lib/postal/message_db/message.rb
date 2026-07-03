@@ -285,7 +285,7 @@ module Postal
         @mail = nil
         @pending_raw_message = nil
         copy_attributes_from_raw_message
-        @database.query("UPDATE `#{@database.database_name}`.`raw_message_sizes` SET size = size + #{size} WHERE table_name = '#{table_name}'")
+        @database.query("UPDATE #{@database.qualify_table(:raw_message_sizes)} SET size = size + #{size} WHERE table_name = '#{table_name}'")
       end
 
       #
