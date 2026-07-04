@@ -16,8 +16,14 @@ class ApplicationController < ActionController::Base
   private
 
   def login_required
-    return if logged_in?
+    return if logged_in? && current_user
 
+    # Session authie encore valide mais User ABSENT (compte supprimé au teardown
+    # d'un tenant, ou provisioning SCIM-only) : logged_in? reste vrai alors que
+    # current_user est nil. Sans ça → 500 (undefined method 'id' for nil) dans
+    # append_info_to_payload / set_timezone. On invalide la session périmée et on
+    # renvoie au login (où le mode SCIM-only refusera de recréer le compte).
+    auth_session.invalidate! if logged_in?
     redirect_to login_path(return_to: request.fullpath)
   end
 
@@ -52,13 +58,15 @@ class ApplicationController < ActionController::Base
   end
 
   def set_timezone
-    Time.zone = logged_in? ? current_user.time_zone : "UTC"
+    Time.zone = current_user&.time_zone || "UTC"
   end
 
   def append_info_to_payload(payload)
     super
     payload[:ip] = request.ip
-    payload[:user] = logged_in? ? current_user.id : nil
+    # current_user peut être nil même si logged_in? (session périmée d'un User
+    # supprimé) — ce hook tourne sur CHAQUE requête, y compris les redirects.
+    payload[:user] = current_user&.id
   end
 
   def url_with_return_to(url)
