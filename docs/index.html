@@ -160,6 +160,7 @@ oidc:
   # jwks_uri: ...                   # override; auto-discovered from issuer by default
   auto_create_org_on_signup: true
   auto_provision_org: false
+  auto_create_user: true            # false = SCIM-only: unknown identities rejected at login (no JIT account creation)
 
 scim:
   enabled: true
