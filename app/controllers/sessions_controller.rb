@@ -102,7 +102,10 @@ class SessionsController < ApplicationController
     raw_info = auth.extra.raw_info
     user     = User.find_from_oidc(raw_info, logger: Postal.logger)
     if user.nil?
-      user = jit_provision_oidc_user(auth, provider_cfg)
+      # SCIM-only mode (oidc.auto_create_user: false) : ne PAS créer de compte à la
+      # volée. Un utilisateur non provisionné (ou dont le tenant a été supprimé) est
+      # rejeté au login au lieu de se voir recréer un compte vide via SSO.
+      user = Postal::Config.oidc.auto_create_user? ? jit_provision_oidc_user(auth, provider_cfg) : nil
       if user.nil?
         redirect_to login_path, alert: "No user was found matching your identity. Please contact your administrator."
         return

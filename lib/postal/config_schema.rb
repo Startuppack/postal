@@ -679,6 +679,11 @@ module Postal
         description "When a new user is JIT-provisioned via SSO, automatically create a default organization named after their username"
         default false
       end
+
+      boolean :auto_create_user do
+        description "JIT-provision a Postal user on OIDC login when no matching user exists. Set false for SCIM-only provisioning: unknown identities are rejected at login instead of being auto-created (prevents accounts reappearing after teardown via SSO)."
+        default true
+      end
     end
 
     group :scim do
