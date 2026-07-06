@@ -109,8 +109,12 @@ module API
 
       def paginate(scope)
         page  = [params[:page].to_i, 1].max
-        limit = [[params[:per_page].to_i, 1].max, 200].min
-        limit = 50 if limit.zero?
+        # per_page absent => to_i == 0 ; l'ancien [[0,1].max,200].min donnait 1
+        # (et le garde `limit.zero?` ne se declenchait jamais) => les listes ne
+        # renvoyaient qu'UN element sans ?per_page explicite.
+        limit = params[:per_page].to_i
+        limit = 50 if limit <= 0
+        limit = [limit, 200].min
         scope.offset((page - 1) * limit).limit(limit)
       end
 
