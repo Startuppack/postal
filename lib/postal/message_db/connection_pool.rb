@@ -11,24 +11,38 @@ module Postal
         @lock = Mutex.new
       end
 
-      def use
-        retried = false
-        do_not_checkin = false
-        begin
-          connection = checkout
+      # Maximum number of times a single #use call will discard a dead pooled
+      # connection and retry with a fresh one. A restart of the message database
+      # (postgres-global) leaves EVERY pooled connection dead, so a single retry
+      # is not enough — each retry only clears one dead connection off the pool.
+      MAX_RECONNECT_ATTEMPTS = 3
 
-          yield connection
-        rescue => e
-          if connection && connection_lost?(connection, e)
-            do_not_checkin = true
-            if retried == false
-              retried = true
-              retry
+      def use
+        attempts = 0
+        loop do
+          connection = checkout
+          begin
+            result = yield connection
+          rescue => e
+            # A lost connection failed BEFORE reaching the server (e.g. the socket
+            # was already closed), so the block had no side effect and retrying is
+            # safe. Discard the dead connection (do NOT return it to the pool) and
+            # take a fresh one. Without this, the dead connection is checked back
+            # in and every subsequent query fails forever until the process is
+            # restarted (observed as "PQsocket() can't get socket descriptor").
+            if connection_lost?(connection, e) && (attempts += 1) <= MAX_RECONNECT_ATTEMPTS
+              begin
+                connection.close
+              rescue StandardError
+                nil
+              end
+              next
             end
+            checkin(connection)
+            raise
           end
-          raise
-        ensure
-          checkin(connection) unless do_not_checkin
+          checkin(connection)
+          return result
         end
       end
 
@@ -40,8 +54,16 @@ module Postal
           error.is_a?(Mysql2::Error) &&
             error.message =~ /(lost connection|gone away|not connected)/i
         when :postgresql
-          defined?(PG::Error) && error.is_a?(PG::Error) &&
-            error.message =~ /(server closed the connection|connection not open)/i
+          return false unless defined?(PG::Error) && error.is_a?(PG::Error)
+          # Connection-level failures are their own error classes in the pg gem
+          # (PG::ConnectionBad covers "server closed the connection unexpectedly",
+          # "PQsocket() can't get socket descriptor", "no connection to the
+          # server"; PG::UnableToSend covers a broken write). Match those by class
+          # first, then fall back to a broadened message match for anything the
+          # gem raises as a generic PG::Error on a dead socket.
+          (defined?(PG::ConnectionBad) && error.is_a?(PG::ConnectionBad)) ||
+            (defined?(PG::UnableToSend) && error.is_a?(PG::UnableToSend)) ||
+            error.message =~ /(server closed the connection|connection not open|no connection to the server|PQsocket|not connected|terminating connection|connection reset|broken pipe|EOF detected)/i
         else
           false
         end
