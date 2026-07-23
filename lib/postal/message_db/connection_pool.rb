@@ -24,20 +24,26 @@ module Postal
           begin
             result = yield connection
           rescue => e
-            # A lost connection failed BEFORE reaching the server (e.g. the socket
-            # was already closed), so the block had no side effect and retrying is
-            # safe. Discard the dead connection (do NOT return it to the pool) and
-            # take a fresh one. Without this, the dead connection is checked back
-            # in and every subsequent query fails forever until the process is
-            # restarted (observed as "PQsocket() can't get socket descriptor").
-            if connection_lost?(connection, e) && (attempts += 1) <= MAX_RECONNECT_ATTEMPTS
+            if connection_lost?(connection, e)
+              # A lost connection must NEVER be returned to the pool — re-pooling a
+              # dead connection is the bug this guards against (every later query
+              # then fails forever until the process restarts, observed as
+              # "PQsocket() can't get socket descriptor"). Close it, then retry
+              # with a fresh connection up to MAX_RECONNECT_ATTEMPTS times (a
+              # database restart kills EVERY pooled connection, so one retry can't
+              # clear the pool). The lost connection failed before reaching the
+              # server, so the block had no side effect and retrying is safe. When
+              # the retries are exhausted, propagate WITHOUT checking it back in.
               begin
                 connection.close
               rescue StandardError
                 nil
               end
-              next
+              next if (attempts += 1) <= MAX_RECONNECT_ATTEMPTS
+
+              raise
             end
+            # A normal error leaves the connection healthy → return it to the pool.
             checkin(connection)
             raise
           end

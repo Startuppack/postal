@@ -42,7 +42,7 @@ describe Postal::MessageDB::ConnectionPool do
       expect(pool.connections).to eq []
     end
 
-    it "retries the block once if there is a connection error" do
+    it "retries the block with a fresh connection up to MAX_RECONNECT_ATTEMPTS times on a connection error" do
       clients_seen = []
       expect do
         pool.use do |client|
@@ -50,7 +50,10 @@ describe Postal::MessageDB::ConnectionPool do
           raise Mysql2::Error, "lost connection to server"
         end
       end.to raise_error Mysql2::Error
-      expect(clients_seen.uniq.size).to eq 2
+      # One initial attempt plus MAX_RECONNECT_ATTEMPTS retries, each on a fresh
+      # connection (a database restart kills every pooled connection, so a single
+      # retry cannot clear the pool).
+      expect(clients_seen.uniq.size).to eq(described_class::MAX_RECONNECT_ATTEMPTS + 1)
     end
   end
 end
