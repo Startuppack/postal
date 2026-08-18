@@ -137,7 +137,8 @@ module MessageDequeuer
 
       sender = @state.sender_for(SMTPSender,
                                  queued_message.message.recipient_domain,
-                                 queued_message.ip_address)
+                                 queued_message.ip_address,
+                                 use_smtp_relays: !SMTPSender.direct_only_sender_domain?(queued_message.message.domain.name))
 
       @result = sender.send_message(queued_message.message)
       return unless @result.connect_error

@@ -9,11 +9,12 @@ class SMTPSender < BaseSender
   # @param domain [String] the domain to send mesages to
   # @param source_ip_address [IPAddress] the IP address to send messages from
   # @param log_id [String] an ID to use when logging requests
-  def initialize(domain, source_ip_address = nil, servers: nil, log_id: nil, rcpt_to: nil)
+  def initialize(domain, source_ip_address = nil, servers: nil, log_id: nil, rcpt_to: nil, use_smtp_relays: true)
     super()
     @domain = domain
     @source_ip_address = source_ip_address
     @rcpt_to = rcpt_to
+    @use_smtp_relays = use_smtp_relays
 
     # An array of servers to forcefully send the message to
     @servers = servers
@@ -27,10 +28,21 @@ class SMTPSender < BaseSender
   end
 
   def start
-    servers = @servers || self.class.smtp_relays || resolve_mx_records_for_domain || []
     deadline = smtp_start_deadline
 
-    servers.each do |server|
+    if @servers
+      return start_with_servers(@servers, deadline: deadline)
+    end
+
+    if @use_smtp_relays && (relay_endpoint = start_with_servers(self.class.smtp_relays, deadline: deadline))
+      return relay_endpoint
+    end
+
+    start_with_servers(resolve_mx_records_for_domain || [], deadline: deadline)
+  end
+
+  def start_with_servers(servers, deadline:)
+    Array(servers).each do |server|
       server.endpoints.each do |endpoint|
         if smtp_start_timeout_exceeded?(deadline)
           logger.error "SMTP session setup timed out after #{Postal::Config.smtp_client.start_timeout} seconds"
@@ -312,10 +324,22 @@ class SMTPSender < BaseSender
       relays = relays.filter_map do |relay|
         next unless relay.host.present?
 
-        SMTPClient::Server.new(relay.host, port: relay.port, ssl_mode: relay.ssl_mode)
+        SMTPClient::Server.new(
+          relay.host,
+          port: relay.port,
+          ssl_mode: relay.ssl_mode,
+          username: relay.username,
+          password: relay.password,
+          auth_type: relay.auth_type
+        )
       end
 
       @smtp_relays = relays.empty? ? nil : relays
+    end
+
+    def direct_only_sender_domain?(domain)
+      domain = domain.to_s.downcase.strip.delete_suffix(".")
+      domain == "startuppack.xyz" || domain.end_with?(".startuppack.xyz")
     end
 
   end

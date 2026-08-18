@@ -89,6 +89,20 @@ module SMTPClient
           expect(endpoint.smtp_client).to have_received(:start).with(Postal::Config.postal.smtp_hostname)
         end
 
+        context "when the server has SMTP authentication configured" do
+          let(:server) { Server.new("mx1.example.com", username: "smtp-user", password: "smtp-pass", auth_type: :login) }
+
+          it "starts the SMTP client with credentials" do
+            endpoint.start_smtp_session
+            expect(endpoint.smtp_client).to have_received(:start).with(
+              Postal::Config.postal.smtp_hostname,
+              "smtp-user",
+              "smtp-pass",
+              :login
+            )
+          end
+        end
+
         context "when the SSL mode is Auto" do
           it "enables STARTTLS auto " do
             client = endpoint.start_smtp_session

@@ -106,6 +106,46 @@ RSpec.describe SMTPSender do
           server: have_attributes(hostname: "relay.example.com", port: 2525, ssl_mode: SMTPClient::SSLModes::TLS)
         )
       end
+
+      context "when the relay cannot be connected to" do
+        let(:smtp_start_error) do
+          proc do |endpoint|
+            Errno::ECONNREFUSED if endpoint.server.hostname == "relay.example.com"
+          end
+        end
+
+        before do
+          allow(DNSResolver.local).to receive(:mx).and_return([[10, "mx1.example.com"]])
+          allow(DNSResolver.local).to receive(:a).with("mx1.example.com").and_return(["6.7.8.9"])
+        end
+
+        it "falls back to direct MX delivery" do
+          endpoint = sender.start
+          expect(endpoint).to be_a SMTPClient::Endpoint
+          expect(endpoint).to have_attributes(
+            ip_address: "6.7.8.9",
+            server: have_attributes(hostname: "mx1.example.com", port: 25, ssl_mode: SMTPClient::SSLModes::AUTO)
+          )
+        end
+      end
+
+      context "when SMTP relays are disabled for the sender" do
+        subject(:sender) { described_class.new("example.com", use_smtp_relays: false) }
+
+        before do
+          allow(DNSResolver.local).to receive(:mx).and_return([[10, "mx1.example.com"]])
+          allow(DNSResolver.local).to receive(:a).with("mx1.example.com").and_return(["6.7.8.9"])
+        end
+
+        it "uses direct MX delivery" do
+          endpoint = sender.start
+          expect(endpoint).to be_a SMTPClient::Endpoint
+          expect(endpoint).to have_attributes(
+            ip_address: "6.7.8.9",
+            server: have_attributes(hostname: "mx1.example.com", port: 25, ssl_mode: SMTPClient::SSLModes::AUTO)
+          )
+        end
+      end
     end
 
     context "when there are servers provided to the class" do
@@ -572,13 +612,18 @@ RSpec.describe SMTPSender do
 
     it "returns relays with options" do
       allow(Postal::Config.postal).to receive(:smtp_relays).and_return([
-                                                                         Hashie::Mash.new(host: "test.example.com", port: 25, ssl_mode: "Auto"),
+                                                                         Hashie::Mash.new(host: "test.example.com", port: 25, ssl_mode: "Auto", username: "user", password: "pass", auth_type: "login"),
                                                                          Hashie::Mash.new(host: "test2.example.com", port: 2525, ssl_mode: "TLS"),
                                                                        ])
       expect(described_class.smtp_relays).to match [
-        have_attributes(hostname: "test.example.com", port: 25, ssl_mode: "Auto"),
+        have_attributes(hostname: "test.example.com", port: 25, ssl_mode: "Auto", username: "user", password: "pass", auth_type: :login),
         have_attributes(hostname: "test2.example.com", port: 2525, ssl_mode: "TLS"),
       ]
+    end
+
+    it "detects startuppack.xyz sender domains as direct-only" do
+      expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be true
+      expect(described_class.direct_only_sender_domain?("startuppack.eu")).to be false
     end
   end
 end
