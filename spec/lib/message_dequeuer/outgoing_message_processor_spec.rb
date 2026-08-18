@@ -383,7 +383,7 @@ module MessageDequeuer
         it "gets a sender from the state and sends the message to it" do
           mocked_sender = double("SMTPSender")
           expect(mocked_sender).to receive(:send_message).with(queued_message.message).and_return(send_result)
-          expect(state).to receive(:sender_for).with(SMTPSender, message.recipient_domain, ip).and_return(mocked_sender)
+          expect(state).to receive(:sender_for).with(SMTPSender, message.recipient_domain, ip, use_smtp_relays: true).and_return(mocked_sender)
 
           processor.process
         end
@@ -393,7 +393,7 @@ module MessageDequeuer
         it "gets a sender from the state and sends the message to it" do
           mocked_sender = double("SMTPSender")
           expect(mocked_sender).to receive(:send_message).with(queued_message.message).and_return(send_result)
-          expect(state).to receive(:sender_for).with(SMTPSender, message.recipient_domain, nil).and_return(mocked_sender)
+          expect(state).to receive(:sender_for).with(SMTPSender, message.recipient_domain, nil, use_smtp_relays: true).and_return(mocked_sender)
 
           processor.process
         end

@@ -78,14 +78,17 @@ module Postal
         transform do |value|
           uri = URI.parse(value)
           query = uri.query ? CGI.parse(uri.query) : {}
-          {
+          relay = {
             host: uri.host,
             port: uri.port || 25,
-            ssl_mode: query["ssl_mode"]&.first || "Auto",
-            username: uri.user && URI.decode_www_form_component(uri.user),
-            password: uri.password && URI.decode_www_form_component(uri.password),
-            auth_type: query["auth_type"]&.first || "login"
+            ssl_mode: query["ssl_mode"]&.first || "Auto"
           }
+          if uri.user
+            relay[:username] = URI.decode_www_form_component(uri.user)
+            relay[:password] = uri.password && URI.decode_www_form_component(uri.password)
+            relay[:auth_type] = query["auth_type"]&.first || "login"
+          end
+          relay
         end
       end
 
