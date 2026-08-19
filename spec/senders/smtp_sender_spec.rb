@@ -623,6 +623,7 @@ RSpec.describe SMTPSender do
 
     it "detects startuppack.xyz sender domains as direct-only" do
       expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be true
+      expect(described_class.direct_only_sender_domain?("e2e-abc.domainethatdoesntexistoninternet.fr")).to be true
       expect(described_class.direct_only_sender_domain?("startuppack.eu")).to be false
     end
   end
