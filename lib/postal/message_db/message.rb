@@ -582,6 +582,11 @@ module Postal
       def encode_utf8(str)
         return "" if str.nil?
 
+        # Header values can be frozen (notably `""` returned for a missing
+        # Subject while frozen_string_literal is enabled). force_encoding is a
+        # mutating operation, so normalize a mutable copy before touching it.
+        str = str.dup if str.frozen?
+
         # If the string is already valid UTF-8, return it as-is
         if str.encoding == Encoding::UTF_8 && str.valid_encoding?
           return str

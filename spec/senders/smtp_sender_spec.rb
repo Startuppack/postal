@@ -129,7 +129,7 @@ RSpec.describe SMTPSender do
         end
       end
 
-      context "when SMTP relays are disabled for the sender" do
+    context "when SMTP relays are disabled for the sender" do
         subject(:sender) { described_class.new("example.com", use_smtp_relays: false) }
 
         before do
@@ -621,10 +621,11 @@ RSpec.describe SMTPSender do
       ]
     end
 
-    it "detects startuppack.xyz sender domains as direct-only" do
-      expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be true
+    it "uses the configured relay for managed platform sender domains" do
+      expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be false
       expect(described_class.direct_only_sender_domain?("e2e-abc.domainethatdoesntexistoninternet.fr")).to be true
       expect(described_class.direct_only_sender_domain?("startuppack.eu")).to be false
+      expect(described_class.direct_only_sender_domain?("customer.example")).to be true
     end
   end
 end

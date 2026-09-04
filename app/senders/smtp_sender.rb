@@ -339,9 +339,13 @@ class SMTPSender < BaseSender
 
     def direct_only_sender_domain?(domain)
       domain = domain.to_s.downcase.strip.delete_suffix(".")
-      domain == "startuppack.xyz" ||
-        domain.end_with?(".startuppack.xyz") ||
-        domain.end_with?(".domainethatdoesntexistoninternet.fr")
+      # Platform tenant domains are under our DNS control and are enrolled in
+      # Mailjet, so they must always leave via the configured relay. Existing
+      # external domains remain direct only until their DNS is delegated and
+      # their Mailjet sender verification has completed.
+      return false if domain == "startuppack.eu" || domain.end_with?(".startuppack.xyz")
+
+      true
     end
 
   end
