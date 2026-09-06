@@ -51,7 +51,11 @@ jobs:
           IFS=',' read -ra TAGS <<< "${{ steps.meta.outputs.tags }}"
           TAGARGS=()
           for tag in "${TAGS[@]}"; do TAGARGS+=( -t "$tag" ); done
-          docker build "${TAGARGS[@]}" \
+          # Podman's Docker-compatible legacy builder can otherwise reuse a
+          # stale COPY layer from another Forgejo workspace while only the
+          # VERSION build arg changes. That produced an image labelled with
+          # the current SHA but containing smtp_sender.rb from an older run.
+          docker build --no-cache "${TAGARGS[@]}" \
             --target full \
             --build-arg VERSION="${{ steps.meta.outputs.short_sha }}" \
             --build-arg BRANCH=main \
