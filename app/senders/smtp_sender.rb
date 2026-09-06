@@ -339,18 +339,9 @@ class SMTPSender < BaseSender
 
     def direct_only_sender_domain?(domain)
       domain = domain.to_s.downcase.strip.delete_suffix(".")
-      # During a Mailjet account-level outage, this tenant falls back to the
-      # Postal node so transactional customer mail remains deliverable. Keep
-      # this exception narrow: normal platform tenant domains use Mailjet.
-      return true if domain == "gottaphish.startuppack.xyz"
-
-      # Platform tenant domains are under our DNS control and are enrolled in
-      # Mailjet, so they normally leave via the configured relay. Existing
-      # external domains remain direct only until their DNS is delegated and
-      # their Mailjet sender verification has completed.
-      return false if domain == "startuppack.eu" || domain.end_with?(".startuppack.xyz")
-
-      true
+      # All customer subdomains managed by the platform use Postal for their
+      # final delivery. Other domains use the configured Mailjet relay.
+      domain.end_with?(".startuppack.xyz")
     end
 
   end
