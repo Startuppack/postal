@@ -107,6 +107,25 @@ RSpec.describe SMTPSender do
         )
       end
 
+      context "when the recipient belongs to a platform-managed domain" do
+        subject(:sender) { described_class.new("tenant.startuppack.xyz") }
+
+        before do
+          allow(DNSResolver.local).to receive(:mx).with("tenant.startuppack.xyz").and_return([[10, "mx.tenant.startuppack.xyz"]])
+          allow(DNSResolver.local).to receive(:a).with("mx.tenant.startuppack.xyz").and_return(["6.7.8.9"])
+        end
+
+        it "skips SMTP relays and uses direct MX delivery" do
+          expect(SMTPSender).not_to receive(:smtp_relays)
+
+          endpoint = sender.start
+          expect(endpoint).to have_attributes(
+            ip_address: "6.7.8.9",
+            server: have_attributes(hostname: "mx.tenant.startuppack.xyz", port: 25, ssl_mode: SMTPClient::SSLModes::AUTO)
+          )
+        end
+      end
+
       context "when the relay cannot be connected to" do
         let(:smtp_start_error) do
           proc do |endpoint|

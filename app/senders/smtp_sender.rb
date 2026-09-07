@@ -34,7 +34,9 @@ class SMTPSender < BaseSender
       return start_with_servers(@servers, deadline: deadline)
     end
 
-    if @use_smtp_relays && (relay_endpoint = start_with_servers(self.class.smtp_relays, deadline: deadline))
+    if @use_smtp_relays &&
+       !self.class.direct_only_sender_domain?(@domain) &&
+       (relay_endpoint = start_with_servers(self.class.smtp_relays, deadline: deadline))
       return relay_endpoint
     end
 
