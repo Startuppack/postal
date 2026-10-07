@@ -269,6 +269,19 @@ module Postal
         default true
       end
 
+      string :level do
+        description "The minimum log level for the Postal logger (debug, info, warn, error, fatal)"
+        default "INFO"
+        transform do |value|
+          normalized = value.to_s.strip.downcase
+          normalized = "info" if normalized.empty?
+          unless %w[debug info warn error fatal].include?(normalized)
+            raise ArgumentError, "logging.level must be one of: debug, info, warn, error, fatal (got #{value.inspect})"
+          end
+          normalized
+        end
+      end
+
       boolean :highlighting_enabled do
         description "Enable highlighting of log lines"
         default false
@@ -399,6 +412,20 @@ module Postal
                     "(which must host the key TXT record) instead of a raw TXT record on the " \
                     "sending domain. Lets a customer add a short CNAME instead of a long key. " \
                     "e.g. dkim1.startuppack.eu"
+      end
+
+      integer :dkim_key_size do
+        description "The size (in bits) of RSA key to generate for DKIM signing (one of 1024, 2048, 3072 or 4096). " \
+                    "Note that records for 2048-bit and larger keys exceed 255 characters and must be " \
+                    "published as a split (multi-string) TXT record."
+        default 2048
+        transform do |value|
+          unless value.nil? || [1024, 2048, 3072, 4096].include?(value)
+            raise Konfig::Error, "dns.dkim_key_size must be one of 1024, 2048, 3072 or 4096 (got #{value})"
+          end
+
+          value
+        end
       end
 
       string :domain_verify_prefix do
