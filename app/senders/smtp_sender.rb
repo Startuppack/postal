@@ -341,9 +341,9 @@ class SMTPSender < BaseSender
 
     def direct_only_sender_domain?(domain)
       domain = domain.to_s.downcase.strip.delete_suffix(".")
-      domain == "startuppack.xyz" ||
-        domain.end_with?(".startuppack.xyz") ||
-        domain.end_with?(".domainethatdoesntexistoninternet.fr")
+      # All customer subdomains managed by the platform use Postal for their
+      # final delivery. Other domains use the configured Mailjet relay.
+      domain.end_with?(".startuppack.xyz")
     end
 
   end
