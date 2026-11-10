@@ -106,6 +106,13 @@ module Postal
                     "All other such destinations are blocked to prevent SSRF."
       end
 
+      string :direct_delivery_domains do
+        array
+        description "Domain suffixes, each starting with a dot (for example .example.com). " \
+                    "Mail to a recipient in one of these domains is delivered directly to its " \
+                    "MX record instead of through smtp_relays. Empty by default."
+      end
+
       integer :queued_message_lock_stale_days do
         description "The number of days after which to consider a lock as stale. Messages with stale locks will be removed and not retried."
         default 1

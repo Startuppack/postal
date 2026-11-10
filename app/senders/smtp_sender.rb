@@ -339,11 +339,15 @@ class SMTPSender < BaseSender
       @smtp_relays = relays.empty? ? nil : relays
     end
 
+    # Recipient domains listed in postal.direct_delivery_domains are delivered
+    # directly to their MX records; other domains go through smtp_relays.
+    # Entries must start with a dot so "example.com" cannot match "badexample.com".
     def direct_only_sender_domain?(domain)
       domain = domain.to_s.downcase.strip.delete_suffix(".")
-      # All customer subdomains managed by the platform use Postal for their
-      # final delivery. Other domains use the configured Mailjet relay.
-      domain.end_with?(".startuppack.xyz")
+      Array(Postal::Config.postal.direct_delivery_domains).any? do |suffix|
+        suffix = suffix.to_s.downcase.strip
+        suffix.start_with?(".") && domain.end_with?(suffix)
+      end
     end
 
   end
