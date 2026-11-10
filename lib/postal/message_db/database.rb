@@ -122,8 +122,8 @@ module Postal
         table_name = raw_table_name_for_date(date)
         begin
           headers, body = data.split(/\r?\n\r?\n/, 2)
-          headers_id = insert(table_name, data: headers)
-          body_id = insert(table_name, data: body)
+          headers_id = insert_raw_part(table_name, headers)
+          body_id = insert_raw_part(table_name, body)
         rescue => e
           raise unless db_error?(e) && e.message =~ /doesn't exist|does not exist/i
 
@@ -131,6 +131,30 @@ module Postal
           retry
         end
         [table_name, headers_id, body_id]
+      end
+
+      # Insert one part of a raw message. On PostgreSQL the data column is bytea:
+      # a quoted text literal is parsed as bytea escape syntax, so any backslash in
+      # the message (e.g. "\x" or "\\") makes the INSERT fail. Send the bytes as a
+      # hex literal instead, which bytea accepts verbatim.
+      def insert_raw_part(table_name, data)
+        return insert(table_name, data: data) unless postgresql?
+        return insert_raw_sql(table_name, "data", "NULL") if data.nil? || data.empty?
+
+        insert_raw_sql(table_name, "data", bytea_hex_literal(data))
+      end
+
+      # Build a PostgreSQL bytea expression for arbitrary bytes. Returns a
+      # decode() call over the hex representation, so no escaping is needed.
+      def bytea_hex_literal(data)
+        "decode('#{data.to_s.b.unpack1("H*")}', 'hex')"
+      end
+
+      def insert_raw_sql(table_name, column, expression)
+        sql = "INSERT INTO #{qualify_table(table_name)} (#{escape_identifier(column)}) VALUES (#{expression})"
+        with_connection do |conn|
+          conn.insert(sql)
+        end
       end
 
       #
