@@ -640,11 +640,29 @@ RSpec.describe SMTPSender do
       ]
     end
 
-    it "uses the configured relay for managed platform sender domains" do
-      expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be false
-      expect(described_class.direct_only_sender_domain?("e2e-abc.domainethatdoesntexistoninternet.fr")).to be true
-      expect(described_class.direct_only_sender_domain?("startuppack.eu")).to be false
-      expect(described_class.direct_only_sender_domain?("customer.example")).to be true
+    describe ".direct_only_sender_domain?" do
+      it "is true for domains under a configured suffix" do
+        allow(Postal::Config.postal).to receive(:direct_delivery_domains).and_return([".startuppack.xyz"])
+        expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be true
+        expect(described_class.direct_only_sender_domain?("A.Startuppack.XYZ.")).to be true
+      end
+
+      it "is false for domains outside the configured suffixes" do
+        allow(Postal::Config.postal).to receive(:direct_delivery_domains).and_return([".startuppack.xyz"])
+        expect(described_class.direct_only_sender_domain?("startuppack.eu")).to be false
+        expect(described_class.direct_only_sender_domain?("customer.example")).to be false
+      end
+
+      it "does not match a suffix without a leading dot" do
+        allow(Postal::Config.postal).to receive(:direct_delivery_domains).and_return(["startuppack.xyz"])
+        expect(described_class.direct_only_sender_domain?("evilstartuppack.xyz")).to be false
+        expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be false
+      end
+
+      it "is false for every domain when nothing is configured" do
+        allow(Postal::Config.postal).to receive(:direct_delivery_domains).and_return(nil)
+        expect(described_class.direct_only_sender_domain?("tenant.startuppack.xyz")).to be false
+      end
     end
   end
 end

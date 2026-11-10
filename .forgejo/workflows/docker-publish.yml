@@ -59,7 +59,7 @@ jobs:
             --build-arg VERSION="${{ steps.meta.outputs.short_sha }}" \
             --build-arg BRANCH=main \
             -f Dockerfile -
-          expected='domain.end_with?(".domainethatdoesntexistoninternet.fr")'
+          expected='def direct_only_sender_domain?(domain)'
           docker run --rm --entrypoint grep "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.short_sha }}" \
             -F "$expected" /opt/postal/app/app/senders/smtp_sender.rb
           for tag in "${TAGS[@]}"; do docker push "$tag"; done
